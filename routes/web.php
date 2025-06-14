@@ -42,7 +42,7 @@ Route::prefix('admin')->middleware(['auth', \App\Http\Middleware\AdminMiddleware
     Route::post('/users/{user}/delete', [UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('admin.users.reset-password');
     
-    // Courses management - เพิ่มเส้นทางใหม่ตามที่ออกแบบไว้
+    // Courses management
     Route::get('/courses', [CourseController::class, 'adminIndex'])->name('admin.courses.index');
     Route::get('/courses/create', [CourseController::class, 'create'])->name('admin.courses.create');
     Route::post('/courses/upload-video', [CourseController::class, 'storeVideo'])->name('admin.courses.store_video');

@@ -15,7 +15,7 @@
     <!-- คอร์สที่อยู่ระหว่างการสร้าง (Draft) -->
     @if($draftCourses->count() > 0)
     <div class="mb-8">
-        <h2 class="text-xl font-bold text-gray-800 mb-4">คอร์สที่อยู่ระหว่างการสร้าง</h2>
+        <h2 class="text-xl font-bold text-gray-800 mb-4">คอร์สที่กำลังสร้าง (Draft)</h2>
         
         <div class="bg-white rounded-lg shadow overflow-hidden">
             <table class="min-w-full divide-y divide-gray-200">
@@ -41,7 +41,7 @@
                                     </span>
                                 @elseif($course->video_url)
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                        URL
+                                        YouTube
                                     </span>
                                 @else
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
@@ -53,7 +53,7 @@
                                 {{ $course->created_at->format('d/m/Y H:i') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="{{ route('admin.courses.edit_details', $course) }}" class="text-blue-600 hover:text-blue-900 mr-3">ดำเนินการต่อ</a>
+                                <a href="{{ route('admin.courses.edit_details', $course) }}" class="text-blue-600 hover:text-blue-900 mr-3">แก้ไข/เผยแพร่</a>
                                 
                                 <form method="POST" action="{{ route('admin.courses.cancel_draft', $course) }}" class="inline-block">
                                     @csrf

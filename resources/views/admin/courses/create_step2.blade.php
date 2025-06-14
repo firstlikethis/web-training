@@ -1,14 +1,14 @@
 @extends('layouts.admin')
 
-@section('title', 'สร้างคอร์สใหม่ - ขั้นตอนที่ 2')
+@section('title', 'รายละเอียดคอร์ส - ขั้นตอนที่ 2')
 
-@section('page-title', 'สร้างคอร์สใหม่ - ขั้นตอนที่ 2')
+@section('page-title', 'กรอกรายละเอียดคอร์ส - Draft')
 
 @section('content')
     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
         <div class="mb-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">ขั้นตอนที่ 2: กรอกรายละเอียดคอร์ส</h2>
-            <p class="text-gray-600 mb-4">กรอกข้อมูลและเพิ่มคำถามสำหรับคอร์สนี้</p>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">รายละเอียดคอร์ส (สถานะ: Draft)</h2>
+            <p class="text-gray-600 mb-4">คุณสามารถบันทึกร่างคอร์สไว้ก่อนและมาแก้ไขเพิ่มเติมในภายหลังได้ หรือกดเผยแพร่เมื่อกรอกข้อมูลครบถ้วน</p>
         </div>
         
         <!-- แสดงตัวอย่างวิดีโอ -->
@@ -42,8 +42,8 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div class="md:col-span-2">
                     <label for="title" class="block text-sm font-medium text-gray-700 mb-1">ชื่อคอร์ส</label>
-                    <input type="text" name="title" id="title" value="{{ old('title') }}" 
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" required>
+                    <input type="text" name="title" id="title" value="{{ old('title', $course->title) }}" 
+                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
                     
                     @error('title')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -53,7 +53,7 @@
                 <div class="md:col-span-2">
                     <label for="description" class="block text-sm font-medium text-gray-700 mb-1">รายละเอียด</label>
                     <textarea name="description" id="description" rows="4" 
-                              class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">{{ old('description') }}</textarea>
+                              class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">{{ old('description', $course->description) }}</textarea>
                     
                     @error('description')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -74,7 +74,7 @@
                 <div>
                     <label for="duration_seconds" class="block text-sm font-medium text-gray-700 mb-1">ความยาววิดีโอ (วินาที)</label>
                     <input type="number" name="duration_seconds" id="duration_seconds" min="0" value="{{ old('duration_seconds', $course->duration_seconds) }}" 
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" required>
+                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
                     <p class="text-sm text-gray-500 mt-1">เช่น 2 นาที 30 วินาที = 150 วินาที</p>
                     
                     @error('duration_seconds')
@@ -196,7 +196,11 @@
                     @csrf
                     <button type="submit" class="text-red-600 hover:text-red-800" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการยกเลิก? วิดีโอและข้อมูลทั้งหมดจะถูกลบ')">ยกเลิก</button>
                 </form>
-                <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">สร้างคอร์สและเผยแพร่</button>
+                
+                <div class="flex space-x-4">
+                    <button type="submit" name="save_draft" value="1" class="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600">บันทึกร่าง</button>
+                    <button type="submit" name="publish" value="1" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">เผยแพร่คอร์ส</button>
+                </div>
             </div>
         </form>
     </div>
@@ -421,16 +425,21 @@
         
         // ตรวจสอบฟอร์มก่อนส่ง
         document.getElementById('courseForm').addEventListener('submit', function(e) {
-            if (!this.checkValidity()) {
-                e.preventDefault();
-                alert('กรุณากรอกข้อมูลให้ครบถ้วน');
-                return;
-            }
+            const isPublishing = e.submitter && e.submitter.name === 'publish';
             
-            const questionItems = document.querySelectorAll('.question-item');
-            if (questionItems.length === 0) {
-                if (!confirm('คุณกำลังจะสร้างคอร์สโดยไม่มีคำถาม คุณแน่ใจหรือไม่?')) {
+            if (isPublishing) {
+                if (!this.checkValidity()) {
                     e.preventDefault();
+                    alert('กรุณากรอกข้อมูลให้ครบถ้วนก่อนเผยแพร่คอร์ส');
+                    return;
+                }
+                
+                // ตรวจสอบชื่อคอร์ส
+                const title = document.getElementById('title').value.trim();
+                if (!title) {
+                    e.preventDefault();
+                    alert('กรุณากรอกชื่อคอร์สก่อนเผยแพร่');
+                    return;
                 }
             }
         });

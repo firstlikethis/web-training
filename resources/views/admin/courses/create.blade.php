@@ -7,8 +7,8 @@
 @section('content')
     <div class="bg-white rounded-lg shadow-md p-6">
         <div class="mb-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">ขั้นตอนที่ 1: อัปโหลดวิดีโอ</h2>
-            <p class="text-gray-600 mb-4">เริ่มต้นด้วยการอัปโหลดวิดีโอหรือระบุ URL ของวิดีโอ</p>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">ขั้นตอนที่ 1: เลือกวิดีโอสำหรับคอร์ส</h2>
+            <p class="text-gray-600 mb-4">คุณสามารถอัปโหลดไฟล์วิดีโอหรือใช้ URL จาก YouTube ได้</p>
         </div>
         
         <form action="{{ route('admin.courses.store_video') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
@@ -23,7 +23,7 @@
                     </label>
                     <label class="inline-flex items-center">
                         <input type="radio" name="video_type" value="url" class="video-type-radio">
-                        <span class="ml-2">ใช้ URL วิดีโอ</span>
+                        <span class="ml-2">ใช้ URL วิดีโอ (YouTube)</span>
                     </label>
                 </div>
                 
@@ -31,7 +31,7 @@
                 <div id="video-upload-section">
                     <label for="video" class="block text-sm font-medium text-gray-700 mb-1">ไฟล์วิดีโอ (MP4, WebM, Ogg)</label>
                     <input type="file" name="video" id="video" accept="video/mp4,video/webm,video/ogg" 
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" required>
+                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
                     <p class="text-sm text-gray-500 mt-1">ระบบจะคำนวณความยาววิดีโอให้อัตโนมัติ</p>
                     
                     @error('video')
@@ -41,11 +41,11 @@
                 
                 <!-- สำหรับ URL วิดีโอ -->
                 <div id="video-url-section" class="hidden">
-                    <label for="video_url" class="block text-sm font-medium text-gray-700 mb-1">URL วิดีโอ (YouTube, Vimeo)</label>
-                    <input type="url" name="video_url" id="video_url" 
+                    <label for="video_url" class="block text-sm font-medium text-gray-700 mb-1">URL วิดีโอ YouTube</label>
+                    <input type="text" name="video_url" id="video_url" 
                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                           placeholder="https://www.youtube.com/embed/...">
-                    <p class="text-sm text-gray-500 mt-1">สำหรับ YouTube ให้ใช้ URL แบบ Embed: https://www.youtube.com/embed/VIDEO_ID</p>
+                           placeholder="https://www.youtube.com/watch?v=XXXXXXXX">
+                    <p class="text-sm text-gray-500 mt-1">คุณสามารถใช้ได้ทั้งรูปแบบ watch URL หรือ share URL เช่น https://youtu.be/XXXXXXXX</p>
                     
                     @error('video_url')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -55,7 +55,7 @@
             
             <div class="flex items-center justify-end mt-8">
                 <a href="{{ route('admin.courses.index') }}" class="text-gray-600 hover:text-gray-800 mr-4">ยกเลิก</a>
-                <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">อัปโหลดวิดีโอและไปขั้นตอนถัดไป</button>
+                <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">ถัดไป</button>
             </div>
         </form>
     </div>
@@ -76,13 +76,9 @@
                 if (this.value === 'upload') {
                     uploadSection.classList.remove('hidden');
                     urlSection.classList.add('hidden');
-                    videoInput.setAttribute('required', '');
-                    urlInput.removeAttribute('required');
                 } else if (this.value === 'url') {
                     uploadSection.classList.add('hidden');
                     urlSection.classList.remove('hidden');
-                    videoInput.removeAttribute('required');
-                    urlInput.setAttribute('required', '');
                 }
             });
         });
@@ -91,10 +87,10 @@
         document.getElementById('uploadForm').addEventListener('submit', function(e) {
             const videoType = document.querySelector('input[name="video_type"]:checked').value;
             
-            if (videoType === 'upload' && !videoInput.files.length) {
+            if (videoType === 'upload' && videoInput.files.length === 0) {
                 e.preventDefault();
-                alert('กรุณาเลือกไฟล์วิดีโอก่อนอัปโหลด');
-            } else if (videoType === 'url' && !urlInput.value) {
+                alert('กรุณาเลือกไฟล์วิดีโอก่อนดำเนินการต่อ');
+            } else if (videoType === 'url' && !urlInput.value.trim()) {
                 e.preventDefault();
                 alert('กรุณาระบุ URL ของวิดีโอ');
             }

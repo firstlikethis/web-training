@@ -14,7 +14,7 @@
             
             <span>
                 <i class="far fa-question-circle mr-1"></i>
-                {{ $questions->count() }} คำถาม
+                {{ $questions->count() ?? 0 }} คำถาม
             </span>
         </div>
         
@@ -35,7 +35,7 @@
     @include('components.quiz-modal')
     
     <!-- Hidden Questions Data -->
-    <div id="questions-data" class="hidden" data-questions="{{ json_encode($questions) }}"></div>
+    <div id="questions-data" class="hidden" data-questions="{{ $questions->count() > 0 ? json_encode($questions) : '[]' }}"></div>
 @endsection
 
 @section('scripts')
@@ -46,26 +46,37 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Get video element
-            const video = document.getElementById('training-video');
-            const courseId = video.dataset.courseId;
+            const videoElement = document.getElementById('training-video');
+            const courseId = "{{ $course->id }}";
+            const isYouTube = {{ $course->video_url ? 'true' : 'false' }};
             
             // Get questions data
-            const questionsData = JSON.parse(document.getElementById('questions-data').dataset.questions);
-            
-            // Initialize question times array
-            const questionTimes = questionsData.map(q => q.time_to_show);
-            
-            // Initialize QuizHandler
-            const quizHandler = new QuizHandler(courseId, submitAnswer, completeQuiz);
-            quizHandler.setQuestions(questionsData);
+            const questionsData = JSON.parse(document.getElementById('questions-data').dataset.questions || '[]');
             
             // Initialize VideoPlayer
-            const videoPlayer = new VideoPlayer(video, showQuestion, saveProgress);
-            videoPlayer.setQuestionTimes(questionTimes);
+            const videoPlayer = new VideoPlayer(videoElement, showQuestion, saveProgress);
+            
+            // Initialize question handling only if there are questions
+            if (questionsData && questionsData.length > 0) {
+                // Initialize question times array
+                const questionTimes = questionsData.map(q => q.time_to_show);
+                
+                // Initialize QuizHandler
+                const quizHandler = new QuizHandler(courseId, submitAnswer, completeQuiz);
+                quizHandler.setQuestions(questionsData);
+                
+                // Set question times
+                videoPlayer.setQuestionTimes(questionTimes);
+            } else {
+                // No questions, set empty array
+                videoPlayer.setQuestionTimes([]);
+            }
             
             // Function to show question at specific time
             function showQuestion(time) {
-                quizHandler.showQuestion(time);
+                if (questionsData && questionsData.length > 0) {
+                    quizHandler.showQuestion(time);
+                }
             }
             
             // Function to save video progress
@@ -127,6 +138,16 @@
             // Function called when all questions are answered
             function completeQuiz() {
                 console.log('All questions answered');
+            }
+            
+            // Setup submit button for quiz
+            const submitButton = document.getElementById('submit-answer');
+            if (submitButton) {
+                submitButton.addEventListener('click', function() {
+                    if (typeof quizHandler !== 'undefined') {
+                        quizHandler.submitAnswer();
+                    }
+                });
             }
         });
     </script>

@@ -11,14 +11,19 @@ class VideoPlayer {
         this.allowedTime = 0;
         this.isWatching = false;
         this.isCompleted = false;
+        this.isYouTube = !videoElement || videoElement.tagName !== 'VIDEO';
         
-        this.initEvents();
+        if (!this.isYouTube) {
+            this.initEvents();
+        }
     }
     
     /**
-     * กำหนด Event listeners
+     * กำหนด Event listeners สำหรับวิดีโอปกติ (ไม่ใช่ YouTube)
      */
     initEvents() {
+        if (!this.video) return;
+        
         // ตรวจจับการเล่นวิดีโอ
         this.video.addEventListener('play', () => {
             this.isWatching = true;
@@ -53,6 +58,29 @@ class VideoPlayer {
      */
     setQuestionTimes(times) {
         this.questionTimes = times.sort((a, b) => a - b);
+        
+        // กำหนดฟังก์ชันสำหรับเช็คคำถามสำหรับ YouTube
+        window.checkQuestionTime = (currentTime) => {
+            if (this.questionTimes.length === 0) {
+                return;
+            }
+            
+            const nextQuestionTime = this.questionTimes[0];
+            
+            if (currentTime >= nextQuestionTime) {
+                // แสดงคำถาม
+                if (this.isYouTube) {
+                    window.pauseYoutubeVideo();
+                } else {
+                    this.video.pause();
+                }
+                
+                this.questionCallback(nextQuestionTime);
+                
+                // ลบเวลาคำถามที่แสดงแล้วออกจาก array
+                this.questionTimes.shift();
+            }
+        };
     }
     
     /**
@@ -64,22 +92,15 @@ class VideoPlayer {
         }
         
         const currentTime = Math.floor(this.video.currentTime);
-        const nextQuestionTime = this.questionTimes[0];
-        
-        if (currentTime >= nextQuestionTime) {
-            // แสดงคำถาม
-            this.video.pause();
-            this.questionCallback(nextQuestionTime);
-            
-            // ลบเวลาคำถามที่แสดงแล้วออกจาก array
-            this.questionTimes.shift();
-        }
+        window.checkQuestionTime(currentTime);
     }
     
     /**
      * บันทึกความคืบหน้าในการดูวิดีโอ
      */
     saveProgress(isCompleted = false) {
+        if (this.isYouTube) return; // YouTube จะจัดการในไฟล์ของตัวเอง
+        
         const currentTime = Math.floor(this.video.currentTime);
         
         // บันทึกทุก 10 วินาที หรือเมื่อจบวิดีโอ
@@ -97,6 +118,10 @@ class VideoPlayer {
      * ดำเนินการเล่นวิดีโอต่อหลังจากตอบคำถามเสร็จ
      */
     continueAfterQuestion() {
-        this.video.play();
+        if (this.isYouTube) {
+            window.playYoutubeVideo();
+        } else if (this.video) {
+            this.video.play();
+        }
     }
 }
