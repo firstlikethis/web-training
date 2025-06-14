@@ -31,4 +31,4 @@ class CreateAnswersTable extends Migration
     {
         Schema::dropIfExists('answers');
     }
-}
+};

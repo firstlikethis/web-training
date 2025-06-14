@@ -36,4 +36,4 @@ class CreateUserProgressTable extends Migration
     {
         Schema::dropIfExists('user_progress');
     }
-}
+};
