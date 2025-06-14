@@ -38,7 +38,6 @@
                 <a href="{{ route('admin.dashboard') }}" class="py-2 px-3 @if(request()->routeIs('admin.dashboard')) bg-gray-600 @endif hover:bg-gray-600 rounded">Dashboard</a>
                 <a href="{{ route('admin.users.index') }}" class="py-2 px-3 @if(request()->routeIs('admin.users.*')) bg-gray-600 @endif hover:bg-gray-600 rounded">จัดการผู้ใช้</a>
                 <a href="{{ route('admin.courses.index') }}" class="py-2 px-3 @if(request()->routeIs('admin.courses.*')) bg-gray-600 @endif hover:bg-gray-600 rounded">จัดการคอร์ส</a>
-                <a href="{{ route('admin.questions.index') }}" class="py-2 px-3 @if(request()->routeIs('admin.questions.*')) bg-gray-600 @endif hover:bg-gray-600 rounded">จัดการคำถาม</a>
                 <a href="{{ route('home') }}" class="py-2 px-3 hover:bg-gray-600 rounded" target="_blank">ดูเว็บไซต์</a>
             </div>
         </div>

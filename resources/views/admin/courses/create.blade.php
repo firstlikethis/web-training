@@ -6,291 +6,59 @@
 
 @section('content')
     <div class="bg-white rounded-lg shadow-md p-6">
-        <form action="{{ route('admin.courses.store') }}" method="POST" enctype="multipart/form-data" id="courseForm">
+        <div class="mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">ขั้นตอนที่ 1: อัปโหลดวิดีโอ</h2>
+            <p class="text-gray-600 mb-4">เริ่มต้นด้วยการอัปโหลดวิดีโอหรือระบุ URL ของวิดีโอ</p>
+        </div>
+        
+        <form action="{{ route('admin.courses.store_video') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
             @csrf
             
             <div class="mb-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">ข้อมูลคอร์ส</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="md:col-span-2">
-                        <label for="title" class="block text-sm font-medium text-gray-700 mb-1">ชื่อคอร์ส</label>
-                        <input type="text" name="title" id="title" value="{{ old('title') }}" 
-                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" required>
-                        
-                        @error('title')
-                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    
-                    <div class="md:col-span-2">
-                        <label for="description" class="block text-sm font-medium text-gray-700 mb-1">รายละเอียด</label>
-                        <textarea name="description" id="description" rows="4" 
-                                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">{{ old('description') }}</textarea>
-                        
-                        @error('description')
-                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    
-                    <div>
-                        <label for="thumbnail" class="block text-sm font-medium text-gray-700 mb-1">รูปภาพปก</label>
-                        <input type="file" name="thumbnail" id="thumbnail" accept="image/*" 
-                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                        
-                        @error('thumbnail')
-                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div class="flex items-center">
-                        <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}
-                               class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                        <label for="is_active" class="ml-2 block text-sm font-medium text-gray-700">เปิดใช้งานคอร์ส</label>
-                    </div>
-                </div>
-
-                <!-- เพิ่มส่วนเลือกประเภทวิดีโอ -->
-                <div class="mt-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ประเภทวิดีโอ</label>
-                    <div class="flex space-x-4 mb-3">
-                        <label class="inline-flex items-center">
-                            <input type="radio" name="video_type" value="upload" class="video-type-radio" {{ old('video_type', 'upload') == 'upload' ? 'checked' : '' }}>
-                            <span class="ml-2">อัพโหลดไฟล์วิดีโอ</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="radio" name="video_type" value="url" class="video-type-radio" {{ old('video_type') == 'url' ? 'checked' : '' }}>
-                            <span class="ml-2">ใช้ URL วิดีโอ</span>
-                        </label>
-                    </div>
-                    
-                    <!-- สำหรับอัพโหลดไฟล์ -->
-                    <div id="video-upload-section" class="{{ old('video_type') == 'url' ? 'hidden' : '' }}">
-                        <label for="video" class="block text-sm font-medium text-gray-700 mb-1">ไฟล์วิดีโอ (MP4, WebM, Ogg)</label>
-                        <input type="file" name="video" id="video" accept="video/mp4,video/webm,video/ogg" 
-                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                        <p class="text-sm text-gray-500 mt-1">ระบบจะคำนวณความยาววิดีโอให้อัตโนมัติหากเป็นไปได้</p>
-                        
-                        @error('video')
-                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    
-                    <!-- สำหรับ URL วิดีโอ -->
-                    <div id="video-url-section" class="{{ old('video_type') != 'url' ? 'hidden' : '' }}">
-                        <label for="video_url" class="block text-sm font-medium text-gray-700 mb-1">URL วิดีโอ (YouTube, Vimeo)</label>
-                        <input type="url" name="video_url" id="video_url" value="{{ old('video_url') }}"
-                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                               placeholder="https://www.youtube.com/embed/...">
-                        <p class="text-sm text-gray-500 mt-1">สำหรับ YouTube ให้ใช้ URL แบบ Embed: https://www.youtube.com/embed/VIDEO_ID</p>
-                        
-                        @error('video_url')
-                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                        
-                        <div class="mt-3">
-                            <label for="duration_seconds" class="block text-sm font-medium text-gray-700 mb-1">ความยาววิดีโอ (วินาที)</label>
-                            <input type="number" name="duration_seconds" id="duration_seconds" min="0" value="{{ old('duration_seconds', 0) }}"
-                                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                            <p class="text-sm text-gray-500 mt-1">กรอกความยาววิดีโอเป็นวินาที เช่น 2 นาที 30 วินาที = 150</p>
-                            
-                            @error('duration_seconds')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- ส่วนของคำถาม -->
-            <div class="mt-8 mb-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">คำถามในคอร์ส</h2>
-                
-                <div id="questions-container">
-                    <!-- คำถามจะถูกเพิ่มที่นี่ด้วย JavaScript -->
-                    @if(old('questions'))
-                        @foreach(old('questions') as $qIndex => $question)
-                            <div class="question-item bg-gray-50 p-4 rounded-lg mb-4">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="text-lg font-medium">คำถามที่ {{ $qIndex + 1 }}</h3>
-                                    <button type="button" class="remove-question text-red-600 hover:text-red-800">
-                                        <span class="text-lg">×</span> ลบคำถามนี้
-                                    </button>
-                                </div>
-                                
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div class="md:col-span-2">
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">ข้อความคำถาม</label>
-                                        <textarea name="questions[{{ $qIndex }}][question_text]" rows="2" 
-                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" required>{{ $question['question_text'] }}</textarea>
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">เวลาที่แสดงคำถาม (วินาที)</label>
-                                        <input type="number" name="questions[{{ $qIndex }}][time_to_show]" min="0" value="{{ $question['time_to_show'] }}" 
-                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" required>
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">เวลาจำกัดในการตอบ (วินาที)</label>
-                                        <input type="number" name="questions[{{ $qIndex }}][time_limit_seconds]" min="5" value="{{ $question['time_limit_seconds'] }}" 
-                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" required>
-                                    </div>
-                                </div>
-                                
-                                <div>
-                                    <h4 class="text-md font-medium text-gray-800 mb-2">ตัวเลือกคำตอบ</h4>
-                                    
-                                    <div class="answers-container space-y-3">
-                                        @if(isset($question['answers']))
-                                            @foreach($question['answers'] as $aIndex => $answer)
-                                                <div class="answer-item grid grid-cols-12 gap-2">
-                                                    <div class="col-span-10">
-                                                        <input type="text" name="questions[{{ $qIndex }}][answers][{{ $aIndex }}][answer_text]" 
-                                                            value="{{ $answer['answer_text'] }}" placeholder="ข้อความคำตอบ" required
-                                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                                                    </div>
-                                                    <div class="col-span-2 flex items-center">
-                                                        <input type="checkbox" name="questions[{{ $qIndex }}][answers][{{ $aIndex }}][is_correct]" 
-                                                            value="1" {{ isset($answer['is_correct']) ? 'checked' : '' }}
-                                                            class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 mr-2 answer-correct">
-                                                        <label class="text-sm font-medium text-gray-700">คำตอบที่ถูก</label>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        @else
-                                            <!-- Default empty answers if no old input -->
-                                            <div class="answer-item grid grid-cols-12 gap-2">
-                                                <div class="col-span-10">
-                                                    <input type="text" name="questions[{{ $qIndex }}][answers][0][answer_text]" placeholder="ข้อความคำตอบ" required
-                                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                                                </div>
-                                                <div class="col-span-2 flex items-center">
-                                                    <input type="checkbox" name="questions[{{ $qIndex }}][answers][0][is_correct]" value="1" checked
-                                                        class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 mr-2 answer-correct">
-                                                    <label class="text-sm font-medium text-gray-700">คำตอบที่ถูก</label>
-                                                </div>
-                                            </div>
-                                            <div class="answer-item grid grid-cols-12 gap-2">
-                                                <div class="col-span-10">
-                                                    <input type="text" name="questions[{{ $qIndex }}][answers][1][answer_text]" placeholder="ข้อความคำตอบ" required
-                                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                                                </div>
-                                                <div class="col-span-2 flex items-center">
-                                                    <input type="checkbox" name="questions[{{ $qIndex }}][answers][1][is_correct]" value="1"
-                                                        class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 mr-2 answer-correct">
-                                                    <label class="text-sm font-medium text-gray-700">คำตอบที่ถูก</label>
-                                                </div>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    
-                                    <button type="button" class="add-answer mt-2 bg-gray-200 text-gray-700 py-1 px-3 rounded hover:bg-gray-300">
-                                        + เพิ่มตัวเลือก
-                                    </button>
-                                </div>
-                            </div>
-                        @endforeach
-                    @endif
+                <label class="block text-sm font-medium text-gray-700 mb-2">เลือกประเภทวิดีโอ</label>
+                <div class="flex space-x-4 mb-4">
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="video_type" value="upload" class="video-type-radio" checked>
+                        <span class="ml-2">อัปโหลดไฟล์วิดีโอ</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="video_type" value="url" class="video-type-radio">
+                        <span class="ml-2">ใช้ URL วิดีโอ</span>
+                    </label>
                 </div>
                 
-                <button type="button" id="add-question" class="mt-4 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">
-                    + เพิ่มคำถามใหม่
-                </button>
+                <!-- สำหรับอัปโหลดไฟล์ -->
+                <div id="video-upload-section">
+                    <label for="video" class="block text-sm font-medium text-gray-700 mb-1">ไฟล์วิดีโอ (MP4, WebM, Ogg)</label>
+                    <input type="file" name="video" id="video" accept="video/mp4,video/webm,video/ogg" 
+                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" required>
+                    <p class="text-sm text-gray-500 mt-1">ระบบจะคำนวณความยาววิดีโอให้อัตโนมัติ</p>
+                    
+                    @error('video')
+                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
                 
-                @error('questions')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                @enderror
+                <!-- สำหรับ URL วิดีโอ -->
+                <div id="video-url-section" class="hidden">
+                    <label for="video_url" class="block text-sm font-medium text-gray-700 mb-1">URL วิดีโอ (YouTube, Vimeo)</label>
+                    <input type="url" name="video_url" id="video_url" 
+                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                           placeholder="https://www.youtube.com/embed/...">
+                    <p class="text-sm text-gray-500 mt-1">สำหรับ YouTube ให้ใช้ URL แบบ Embed: https://www.youtube.com/embed/VIDEO_ID</p>
+                    
+                    @error('video_url')
+                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
             
             <div class="flex items-center justify-end mt-8">
                 <a href="{{ route('admin.courses.index') }}" class="text-gray-600 hover:text-gray-800 mr-4">ยกเลิก</a>
-                <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">สร้างคอร์สพร้อมคำถาม</button>
+                <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">อัปโหลดวิดีโอและไปขั้นตอนถัดไป</button>
             </div>
         </form>
     </div>
-    
-    <!-- Template สำหรับคำถามใหม่ (จะถูกซ่อนไว้) -->
-    <template id="question-template">
-        <div class="question-item bg-gray-50 p-4 rounded-lg mb-4">
-            <div class="flex justify-between items-start mb-4">
-                <h3 class="text-lg font-medium">คำถามใหม่</h3>
-                <button type="button" class="remove-question text-red-600 hover:text-red-800">
-                    <span class="text-lg">×</span> ลบคำถามนี้
-                </button>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ข้อความคำถาม</label>
-                    <textarea name="questions[INDEX][question_text]" rows="2" 
-                              class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" required></textarea>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">เวลาที่แสดงคำถาม (วินาที)</label>
-                    <input type="number" name="questions[INDEX][time_to_show]" min="0" value="0" 
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" required>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">เวลาจำกัดในการตอบ (วินาที)</label>
-                    <input type="number" name="questions[INDEX][time_limit_seconds]" min="5" value="30" 
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" required>
-                </div>
-            </div>
-            
-            <div>
-                <h4 class="text-md font-medium text-gray-800 mb-2">ตัวเลือกคำตอบ</h4>
-                
-                <div class="answers-container space-y-3">
-                    <!-- คำตอบเริ่มต้น 2 ข้อ -->
-                    <div class="answer-item grid grid-cols-12 gap-2">
-                        <div class="col-span-10">
-                            <input type="text" name="questions[INDEX][answers][0][answer_text]" placeholder="ข้อความคำตอบ" required
-                                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                        </div>
-                        <div class="col-span-2 flex items-center">
-                            <input type="checkbox" name="questions[INDEX][answers][0][is_correct]" value="1" checked
-                                   class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 mr-2 answer-correct">
-                            <label class="text-sm font-medium text-gray-700">คำตอบที่ถูก</label>
-                        </div>
-                    </div>
-                    
-                    <div class="answer-item grid grid-cols-12 gap-2">
-                        <div class="col-span-10">
-                            <input type="text" name="questions[INDEX][answers][1][answer_text]" placeholder="ข้อความคำตอบ" required
-                                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                        </div>
-                        <div class="col-span-2 flex items-center">
-                            <input type="checkbox" name="questions[INDEX][answers][1][is_correct]" value="1"
-                                   class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 mr-2 answer-correct">
-                            <label class="text-sm font-medium text-gray-700">คำตอบที่ถูก</label>
-                        </div>
-                    </div>
-                </div>
-                
-                <button type="button" class="add-answer mt-2 bg-gray-200 text-gray-700 py-1 px-3 rounded hover:bg-gray-300">
-                    + เพิ่มตัวเลือก
-                </button>
-            </div>
-        </div>
-    </template>
-    
-    <!-- Template สำหรับตัวเลือกคำตอบใหม่ -->
-    <template id="answer-template">
-        <div class="answer-item grid grid-cols-12 gap-2">
-            <div class="col-span-10">
-                <input type="text" name="questions[QUESTION_INDEX][answers][ANSWER_INDEX][answer_text]" placeholder="ข้อความคำตอบ" required
-                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-            </div>
-            <div class="col-span-2 flex items-center">
-                <input type="checkbox" name="questions[QUESTION_INDEX][answers][ANSWER_INDEX][is_correct]" value="1"
-                       class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 mr-2 answer-correct">
-                <label class="text-sm font-medium text-gray-700">คำตอบที่ถูก</label>
-            </div>
-        </div>
-    </template>
 @endsection
 
 @section('scripts')
@@ -300,160 +68,36 @@
         const radioButtons = document.querySelectorAll('.video-type-radio');
         const uploadSection = document.getElementById('video-upload-section');
         const urlSection = document.getElementById('video-url-section');
+        const videoInput = document.getElementById('video');
+        const urlInput = document.getElementById('video_url');
         
         radioButtons.forEach(radio => {
             radio.addEventListener('change', function() {
                 if (this.value === 'upload') {
                     uploadSection.classList.remove('hidden');
                     urlSection.classList.add('hidden');
+                    videoInput.setAttribute('required', '');
+                    urlInput.removeAttribute('required');
                 } else if (this.value === 'url') {
                     uploadSection.classList.add('hidden');
                     urlSection.classList.remove('hidden');
+                    videoInput.removeAttribute('required');
+                    urlInput.setAttribute('required', '');
                 }
             });
         });
         
-        // สำหรับการเพิ่มคำถาม
-        const questionsContainer = document.getElementById('questions-container');
-        const addQuestionButton = document.getElementById('add-question');
-        const questionTemplate = document.getElementById('question-template');
-        const answerTemplate = document.getElementById('answer-template');
-        
-        // นับจำนวนคำถามที่มีอยู่แล้ว (กรณี validation error)
-        let questionIndex = document.querySelectorAll('.question-item').length;
-        
-        // เพิ่มคำถามใหม่
-        addQuestionButton.addEventListener('click', function() {
-            const questionItem = questionTemplate.content.cloneNode(true);
+        // ตรวจสอบฟอร์มก่อนส่ง
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            const videoType = document.querySelector('input[name="video_type"]:checked').value;
             
-            // อัปเดต index ของคำถาม
-            const questionFields = questionItem.querySelectorAll('[name^="questions[INDEX]"]');
-            questionFields.forEach(field => {
-                field.name = field.name.replace('INDEX', questionIndex);
-            });
-            
-            // เพิ่ม event listener สำหรับปุ่มลบคำถาม
-            const removeButton = questionItem.querySelector('.remove-question');
-            removeButton.addEventListener('click', function() {
-                this.closest('.question-item').remove();
-                updateQuestionIndices();
-            });
-            
-            // เพิ่ม event listener สำหรับปุ่มเพิ่มตัวเลือก
-            const addAnswerButton = questionItem.querySelector('.add-answer');
-            let answerIndex = 2; // เริ่มจาก 2 เพราะมีตัวเลือกเริ่มต้น 2 ข้อ
-            
-            addAnswerButton.addEventListener('click', function() {
-                const answerItem = answerTemplate.content.cloneNode(true);
-                const answerFields = answerItem.querySelectorAll('[name^="questions[QUESTION_INDEX]"]');
-                
-                answerFields.forEach(field => {
-                    field.name = field.name.replace('QUESTION_INDEX', questionIndex).replace('ANSWER_INDEX', answerIndex);
-                });
-                
-                const answerCorrectCheckbox = answerItem.querySelector('.answer-correct');
-                answerCorrectCheckbox.addEventListener('change', function() {
-                    handleCorrectAnswer(this);
-                });
-                
-                this.previousElementSibling.appendChild(answerItem);
-                answerIndex++;
-            });
-            
-            // เพิ่ม event listener สำหรับ checkbox คำตอบที่ถูก
-            const correctCheckboxes = questionItem.querySelectorAll('.answer-correct');
-            correctCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    handleCorrectAnswer(this);
-                });
-            });
-            
-            questionsContainer.appendChild(questionItem);
-            questionIndex++;
-        });
-        
-        // ฟังก์ชันสำหรับจัดการเมื่อเลือกคำตอบที่ถูก
-        function handleCorrectAnswer(checkbox) {
-            if (checkbox.checked) {
-                // ล้างการเลือกคำตอบที่ถูกอื่นๆ ในคำถามเดียวกัน
-                const questionItem = checkbox.closest('.question-item');
-                const otherCheckboxes = questionItem.querySelectorAll('.answer-correct');
-                
-                otherCheckboxes.forEach(otherCheckbox => {
-                    if (otherCheckbox !== checkbox) {
-                        otherCheckbox.checked = false;
-                    }
-                });
+            if (videoType === 'upload' && !videoInput.files.length) {
+                e.preventDefault();
+                alert('กรุณาเลือกไฟล์วิดีโอก่อนอัปโหลด');
+            } else if (videoType === 'url' && !urlInput.value) {
+                e.preventDefault();
+                alert('กรุณาระบุ URL ของวิดีโอ');
             }
-        }
-        
-        // ฟังก์ชันสำหรับอัปเดต index ของคำถามหลังจากลบคำถาม
-        function updateQuestionIndices() {
-            const questionItems = document.querySelectorAll('.question-item');
-            
-            questionItems.forEach((item, index) => {
-                const questionFields = item.querySelectorAll(`[name^="questions["]`);
-                
-                questionFields.forEach(field => {
-                    // ใช้ regex เพื่อแทนที่ index ของคำถาม
-                    field.name = field.name.replace(/questions\[\d+\]/, `questions[${index}]`);
-                });
-            });
-            
-            // อัปเดต questionIndex global
-            questionIndex = questionItems.length;
-        }
-        
-        // เพิ่มการตรวจสอบว่ามีคำถามอย่างน้อย 1 ข้อก่อนส่งฟอร์ม
-        document.getElementById('courseForm').addEventListener('submit', function(e) {
-            const questionItems = document.querySelectorAll('.question-item');
-            
-            if (questionItems.length === 0) {
-                if (!confirm('คุณกำลังจะสร้างคอร์สโดยไม่มีคำถาม คุณแน่ใจหรือไม่?')) {
-                    e.preventDefault();
-                }
-            }
-        });
-        
-        // ตั้งค่า event handlers สำหรับปุ่มลบคำถามและเพิ่มตัวเลือกที่มีอยู่แล้ว (กรณี validation error)
-        const existingRemoveButtons = document.querySelectorAll('.remove-question');
-        existingRemoveButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                this.closest('.question-item').remove();
-                updateQuestionIndices();
-            });
-        });
-        
-        const existingAddAnswerButtons = document.querySelectorAll('.add-answer');
-        existingAddAnswerButtons.forEach((button, qIndex) => {
-            // หาจำนวนคำตอบที่มีอยู่แล้วในคำถามนี้
-            const answerCount = button.previousElementSibling.querySelectorAll('.answer-item').length;
-            let nextAnswerIndex = answerCount;
-            
-            button.addEventListener('click', function() {
-                const answerItem = answerTemplate.content.cloneNode(true);
-                const answerFields = answerItem.querySelectorAll('[name^="questions[QUESTION_INDEX]"]');
-                
-                answerFields.forEach(field => {
-                    field.name = field.name.replace('QUESTION_INDEX', qIndex).replace('ANSWER_INDEX', nextAnswerIndex);
-                });
-                
-                const answerCorrectCheckbox = answerItem.querySelector('.answer-correct');
-                answerCorrectCheckbox.addEventListener('change', function() {
-                    handleCorrectAnswer(this);
-                });
-                
-                this.previousElementSibling.appendChild(answerItem);
-                nextAnswerIndex++;
-            });
-        });
-        
-        // ตั้งค่า event handlers สำหรับ checkboxes ที่มีอยู่แล้ว
-        const existingCorrectCheckboxes = document.querySelectorAll('.answer-correct');
-        existingCorrectCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                handleCorrectAnswer(this);
-            });
         });
     });
 </script>

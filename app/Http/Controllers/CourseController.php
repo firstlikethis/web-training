@@ -37,7 +37,7 @@ class CourseController extends Controller
     public function show(Course $course)
     {
         // ตรวจสอบว่าคอร์สยังใช้งานได้อยู่หรือไม่
-        if (!$course->is_active) {
+        if (!$course->is_active || $course->status !== 'published') {
             return redirect()->route('home')->with('error', 'คอร์สนี้ไม่สามารถเข้าถึงได้');
         }
 
@@ -170,15 +170,20 @@ class CourseController extends Controller
      */
     public function adminIndex()
     {
-        $courses = Course::withCount('questions')
+        $courses = Course::where('status', 'published')
+            ->withCount('questions')
             ->orderBy('title')
             ->paginate(10);
 
-        return view('admin.courses.index', compact('courses'));
+        $draftCourses = Course::where('status', 'draft')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('admin.courses.index', compact('courses', 'draftCourses'));
     }
 
     /**
-     * แสดงหน้าสร้างคอร์สใหม่
+     * แสดงหน้าสร้างคอร์สใหม่ (ขั้นตอนที่ 1 - อัปโหลดวิดีโอ)
      */
     public function create()
     {
@@ -186,32 +191,86 @@ class CourseController extends Controller
     }
 
     /**
-     * คำนวณความยาววิดีโอในวินาที
+     * บันทึกวิดีโอและนำไปสู่การสร้างคอร์ส (ขั้นตอนที่ 1)
      */
-    private function getVideoDuration($videoPath)
+    public function storeVideo(Request $request)
     {
-        $getID3 = new getID3;
-        $fileInfo = $getID3->analyze(storage_path('app/public/' . $videoPath));
-        
-        if (isset($fileInfo['playtime_seconds'])) {
-            return (int) $fileInfo['playtime_seconds'];
+        $request->validate([
+            'video_type' => 'required|in:upload,url',
+            'video' => 'nullable|file|mimes:mp4,webm,ogg|max:102400',
+            'video_url' => 'nullable|url',
+        ]);
+
+        try {
+            DB::beginTransaction();
+            
+            // สร้างคอร์สว่างๆ ก่อน (สถานะ draft)
+            $course = new Course();
+            $course->title = 'Draft Course ' . now()->format('Y-m-d H:i:s');
+            $course->status = 'draft';
+            $course->is_active = false;
+            
+            // จัดการวิดีโอ
+            $videoPath = null;
+            $videoUrl = null;
+            $durationSeconds = 0;
+
+            if ($request->video_type == 'upload' && $request->hasFile('video')) {
+                $videoPath = $request->file('video')->store('videos', 'public');
+                // พยายามคำนวณความยาววิดีโอถ้ามี getID3
+                try {
+                    if (class_exists('getID3')) {
+                        $durationSeconds = $this->getVideoDuration($videoPath);
+                    }
+                } catch (\Exception $e) {
+                    // ถ้าไม่สามารถคำนวณได้ ใช้ค่าเริ่มต้น
+                }
+                
+                $course->video_path = $videoPath;
+                $course->duration_seconds = $durationSeconds;
+            } elseif ($request->video_type == 'url' && $request->video_url) {
+                $videoUrl = $request->video_url;
+                $course->video_url = $videoUrl;
+                // สำหรับ URL จะต้องมีการกรอกความยาววิดีโอในขั้นตอนถัดไป
+            } else {
+                throw new \Exception('โปรดเลือกวิดีโอหรือระบุ URL');
+            }
+            
+            $course->save();
+            
+            DB::commit();
+            
+            // นำไปสู่ขั้นตอนที่ 2
+            return redirect()->route('admin.courses.edit_details', $course)
+                ->with('success', 'อัปโหลดวิดีโอเรียบร้อยแล้ว กรุณากรอกรายละเอียดคอร์ส');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withInput()->withErrors(['error' => 'เกิดข้อผิดพลาดในการอัปโหลดวิดีโอ: ' . $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * แสดงหน้าแก้ไขรายละเอียดคอร์ส (ขั้นตอนที่ 2)
+     */
+    public function editDetails(Course $course)
+    {
+        // ตรวจสอบว่าเป็น draft หรือไม่
+        if ($course->status !== 'draft') {
+            return redirect()->route('admin.courses.edit', $course);
         }
         
-        return 0;
+        return view('admin.courses.create_step2', compact('course'));
     }
-
+    
     /**
-     * บันทึกข้อมูลคอร์สใหม่พร้อมคำถาม
+     * บันทึกรายละเอียดคอร์สและเผยแพร่ (ขั้นตอนที่ 2)
      */
-    public function store(Request $request)
+    public function storeDetails(Request $request, Course $course)
     {
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'thumbnail' => 'nullable|image|max:2048',
-            'video_type' => 'required|in:upload,url',
-            'video' => 'nullable|file|mimes:mp4,webm,ogg|max:102400',
-            'video_url' => 'nullable|url',
             'duration_seconds' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
             // คำถามและคำตอบ
@@ -227,52 +286,108 @@ class CourseController extends Controller
         DB::beginTransaction();
         try {
             // อัปโหลดไฟล์รูปภาพ
-            $thumbnailPath = null;
             if ($request->hasFile('thumbnail')) {
                 $thumbnailPath = $request->file('thumbnail')->store('thumbnails', 'public');
+                $course->thumbnail = $thumbnailPath;
             }
-
-            // จัดการวิดีโอ
-            $videoPath = null;
-            $videoUrl = null;
-            $durationSeconds = $request->duration_seconds ?? 0;
-
-            if ($request->video_type == 'upload' && $request->hasFile('video')) {
-                $videoPath = $request->file('video')->store('videos', 'public');
-                // พยายามคำนวณความยาววิดีโอถ้ามี getID3
-                try {
-                    if (class_exists('getID3')) {
-                        $durationSeconds = $this->getVideoDuration($videoPath);
-                    }
-                } catch (\Exception $e) {
-                    // ถ้าไม่สามารถคำนวณได้ ใช้ค่าที่ผู้ใช้กรอก
-                }
-            } elseif ($request->video_type == 'url' && $request->video_url) {
-                $videoUrl = $request->video_url;
+            
+            // อัปเดตข้อมูลคอร์ส
+            $course->title = $request->title;
+            $course->description = $request->description;
+            
+            // อัปเดตความยาววิดีโอ (สำหรับ URL วิดีโอ)
+            if ($course->video_url && $request->has('duration_seconds')) {
+                $course->duration_seconds = $request->duration_seconds;
             }
-
-            // สร้างคอร์ส
-            $course = Course::create([
-                'title' => $request->title,
-                'description' => $request->description,
-                'thumbnail' => $thumbnailPath,
-                'video_path' => $videoPath,
-                'video_url' => $videoUrl,
-                'duration_seconds' => $durationSeconds,
-                'is_active' => $request->has('is_active'),
-            ]);
-
+            
+            $course->is_active = $request->has('is_active');
+            $course->status = 'published'; // เปลี่ยนสถานะเป็น published
+            $course->save();
+            
             // บันทึกคำถามและคำตอบ (ถ้ามี)
             if ($request->has('questions') && is_array($request->questions)) {
-                // โค้ดการบันทึกคำถามยังคงเหมือนเดิม
+                foreach ($request->questions as $questionData) {
+                    $question = new Question([
+                        'question_text' => $questionData['question_text'],
+                        'time_to_show' => $questionData['time_to_show'],
+                        'time_limit_seconds' => $questionData['time_limit_seconds'],
+                        'is_active' => true,
+                    ]);
+                    
+                    $course->questions()->save($question);
+                    
+                    // ตรวจสอบว่ามีคำตอบที่ถูกอย่างน้อย 1 ข้อ
+                    $hasCorrectAnswer = false;
+                    
+                    // บันทึกคำตอบ
+                    if (isset($questionData['answers']) && is_array($questionData['answers'])) {
+                        foreach ($questionData['answers'] as $answerData) {
+                            $isCorrect = isset($answerData['is_correct']) && $answerData['is_correct'];
+                            
+                            if ($isCorrect) {
+                                $hasCorrectAnswer = true;
+                            }
+                            
+                            $answer = new Answer([
+                                'answer_text' => $answerData['answer_text'],
+                                'is_correct' => $isCorrect,
+                            ]);
+                            
+                            $question->answers()->save($answer);
+                        }
+                    }
+                    
+                    // ถ้าไม่มีคำตอบที่ถูก ให้ตั้งคำตอบแรกเป็นคำตอบที่ถูก
+                    if (!$hasCorrectAnswer && $question->answers()->count() > 0) {
+                        $firstAnswer = $question->answers()->first();
+                        $firstAnswer->is_correct = true;
+                        $firstAnswer->save();
+                    }
+                }
             }
-
+            
             DB::commit();
             return redirect()->route('admin.courses.index')
-                ->with('success', 'สร้างคอร์ส ' . $course->title . ' พร้อมคำถามเรียบร้อยแล้ว');
+                ->with('success', 'สร้างคอร์ส ' . $course->title . ' เรียบร้อยแล้ว');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withInput()->withErrors(['error' => 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' . $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * ยกเลิกการสร้างคอร์ส (ลบ draft)
+     */
+    public function cancelDraft(Course $course)
+    {
+        // ตรวจสอบว่าเป็น draft หรือไม่
+        if ($course->status !== 'draft') {
+            return redirect()->route('admin.courses.index')
+                ->with('error', 'ไม่สามารถยกเลิกคอร์สที่เผยแพร่แล้ว');
+        }
+        
+        try {
+            DB::beginTransaction();
+            
+            // ลบไฟล์ที่เกี่ยวข้อง
+            if ($course->thumbnail) {
+                Storage::disk('public')->delete($course->thumbnail);
+            }
+
+            if ($course->video_path) {
+                Storage::disk('public')->delete($course->video_path);
+            }
+            
+            // ลบคอร์ส
+            $course->delete();
+            
+            DB::commit();
+            return redirect()->route('admin.courses.index')
+                ->with('success', 'ยกเลิกการสร้างคอร์สเรียบร้อยแล้ว');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('admin.courses.index')
+                ->with('error', 'เกิดข้อผิดพลาดในการยกเลิกคอร์ส: ' . $e->getMessage());
         }
     }
 
@@ -281,6 +396,11 @@ class CourseController extends Controller
      */
     public function edit(Course $course)
     {
+        // ตรวจสอบว่าคอร์สเผยแพร่แล้วหรือไม่
+        if ($course->status !== 'published') {
+            return redirect()->route('admin.courses.edit_details', $course);
+        }
+        
         // โหลดคำถามและคำตอบ
         $course->load('questions.answers');
         return view('admin.courses.edit', compact('course'));
@@ -321,16 +441,16 @@ class CourseController extends Controller
 
                 $videoPath = $request->file('video')->store('videos', 'public');
                 $course->video_path = $videoPath;
+                $course->video_url = null; // ล้าง URL ถ้ามีการอัปโหลดไฟล์
                 
                 // คำนวณความยาววิดีโอใหม่
                 $course->duration_seconds = $this->getVideoDuration($videoPath);
             }
 
-            $course->update([
-                'title' => $request->title,
-                'description' => $request->description,
-                'is_active' => $request->has('is_active'),
-            ]);
+            $course->title = $request->title;
+            $course->description = $request->description;
+            $course->is_active = $request->has('is_active');
+            $course->save();
 
             DB::commit();
             return redirect()->route('admin.courses.index')
@@ -440,5 +560,20 @@ class CourseController extends Controller
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'เกิดข้อผิดพลาดในการลบข้อมูล: ' . $e->getMessage()]);
         }
+    }
+    
+    /**
+     * คำนวณความยาววิดีโอในวินาที
+     */
+    private function getVideoDuration($videoPath)
+    {
+        $getID3 = new getID3;
+        $fileInfo = $getID3->analyze(storage_path('app/public/' . $videoPath));
+        
+        if (isset($fileInfo['playtime_seconds'])) {
+            return (int) $fileInfo['playtime_seconds'];
+        }
+        
+        return 0;
     }
 }

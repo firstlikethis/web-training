@@ -42,16 +42,17 @@ Route::prefix('admin')->middleware(['auth', \App\Http\Middleware\AdminMiddleware
     Route::post('/users/{user}/delete', [UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('admin.users.reset-password');
     
-    // Courses management
+    // Courses management - เพิ่มเส้นทางใหม่ตามที่ออกแบบไว้
     Route::get('/courses', [CourseController::class, 'adminIndex'])->name('admin.courses.index');
     Route::get('/courses/create', [CourseController::class, 'create'])->name('admin.courses.create');
-    Route::post('/courses', [CourseController::class, 'store'])->name('admin.courses.store');
+    Route::post('/courses/upload-video', [CourseController::class, 'storeVideo'])->name('admin.courses.store_video');
+    Route::get('/courses/{course}/edit-details', [CourseController::class, 'editDetails'])->name('admin.courses.edit_details');
+    Route::post('/courses/{course}/store-details', [CourseController::class, 'storeDetails'])->name('admin.courses.store_details');
+    Route::post('/courses/{course}/cancel-draft', [CourseController::class, 'cancelDraft'])->name('admin.courses.cancel_draft');
     Route::get('/courses/{course}/edit', [CourseController::class, 'edit'])->name('admin.courses.edit');
     Route::post('/courses/{course}', [CourseController::class, 'update'])->name('admin.courses.update');
     Route::post('/courses/{course}/delete', [CourseController::class, 'destroy'])->name('admin.courses.destroy');
     
     Route::post('/courses/{course}/questions', [CourseController::class, 'addQuestion'])->name('admin.courses.questions.add');
     Route::post('/questions/{question}/delete', [CourseController::class, 'deleteQuestion'])->name('admin.courses.questions.delete');
-    
-    Route::get('/questions', [QuestionController::class, 'index'])->name('admin.questions.index');
 });

@@ -9,15 +9,15 @@ class Course extends Model
 {
     use HasFactory;
     
-    // แก้ไขใน Model Course.php เพิ่มฟิลด์
     protected $fillable = [
         'title',
         'description',
         'thumbnail',
         'video_path',
-        'video_url',  // เพิ่มฟิลด์นี้
+        'video_url',
         'duration_seconds',
         'is_active',
+        'status',
     ];
     
     protected $casts = [
@@ -41,9 +41,31 @@ class Course extends Model
         return $this->hasMany(UserAnswer::class);
     }
     
-    // Active courses
+    // Scopes
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('is_active', true)->where('status', 'published');
+    }
+    
+    public function scopeDraft($query)
+    {
+        return $query->where('status', 'draft');
+    }
+    
+    public function scopePublished($query)
+    {
+        return $query->where('status', 'published');
+    }
+    
+    // Check if course is in draft state
+    public function isDraft()
+    {
+        return $this->status === 'draft';
+    }
+    
+    // Check if course is published
+    public function isPublished()
+    {
+        return $this->status === 'published';
     }
 }
