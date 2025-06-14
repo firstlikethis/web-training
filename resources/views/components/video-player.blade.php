@@ -1,23 +1,35 @@
-<div class="video-player-container relative">
-    <video 
-        id="training-video" 
-        class="w-full rounded-lg shadow-lg" 
-        controls
-        controlsList="nodownload"
-        poster="{{ $course->thumbnail ? asset('storage/' . $course->thumbnail) : '' }}"
-        data-course-id="{{ $course->id }}"
-    >
-        <source src="{{ asset('storage/' . $course->video_path) }}" type="video/mp4">
-        เบราว์เซอร์ของคุณไม่รองรับการเล่นวิดีโอ HTML5
-    </video>
-    
-    @if(isset($userProgress) && $userProgress->current_time > 0 && !$userProgress->is_completed)
-        <div class="bg-white text-gray-800 p-4 rounded-lg shadow-lg absolute top-4 left-4 z-10">
-            <p class="font-medium">คุณดูวิดีโอนี้ไปแล้ว {{ $userProgress->getCompletionPercentage() }}%</p>
-            <button id="resume-video" class="mt-2 bg-blue-600 text-white py-1 px-3 rounded hover:bg-blue-700 text-sm">เล่นต่อจากครั้งที่แล้ว</button>
-        </div>
-    @endif
-</div>
+    <div class="video-player-container relative">
+        @if($course->video_path)
+            <video 
+                id="training-video" 
+                class="w-full rounded-lg shadow-lg" 
+                controls
+                controlsList="nodownload"
+                poster="{{ $course->thumbnail ? asset('storage/' . $course->thumbnail) : '' }}"
+                data-course-id="{{ $course->id }}"
+            >
+                <source src="{{ asset('storage/' . $course->video_path) }}" type="video/mp4">
+                เบราว์เซอร์ของคุณไม่รองรับการเล่นวิดีโอ HTML5
+            </video>
+        @elseif($course->video_url)
+            <div class="aspect-w-16 aspect-h-9">
+                <iframe 
+                    id="training-video"
+                    class="w-full h-full rounded-lg shadow-lg" 
+                    src="{{ $course->video_url }}" 
+                    allowfullscreen
+                    data-course-id="{{ $course->id }}"
+                ></iframe>
+            </div>
+        @endif
+        
+        @if(isset($userProgress) && $userProgress->current_time > 0 && !$userProgress->is_completed)
+            <div class="bg-white text-gray-800 p-4 rounded-lg shadow-lg absolute top-4 left-4 z-10">
+                <p class="font-medium">คุณดูวิดีโอนี้ไปแล้ว {{ $userProgress->getCompletionPercentage() }}%</p>
+                <button id="resume-video" class="mt-2 bg-blue-600 text-white py-1 px-3 rounded hover:bg-blue-700 text-sm">เล่นต่อจากครั้งที่แล้ว</button>
+            </div>
+        @endif
+    </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

@@ -29,7 +29,8 @@ Route::middleware(['auth', \App\Http\Middleware\UserMiddleware::class])->group(f
     Route::get('/course/{course}/summary', [CourseController::class, 'summary'])->name('course.summary');
 });
 
-Route::prefix('dashboard-x7cA1v')->middleware(['auth', \App\Http\Middleware\AdminMiddleware::class])->group(function () {
+// Admin routes
+Route::prefix('admin')->middleware(['auth', \App\Http\Middleware\AdminMiddleware::class])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
     
     // Users management
@@ -49,16 +50,8 @@ Route::prefix('dashboard-x7cA1v')->middleware(['auth', \App\Http\Middleware\Admi
     Route::post('/courses/{course}', [CourseController::class, 'update'])->name('admin.courses.update');
     Route::post('/courses/{course}/delete', [CourseController::class, 'destroy'])->name('admin.courses.destroy');
     
-    // Questions management
-    Route::get('/questions', [QuestionController::class, 'index'])->name('admin.questions.index');
-    Route::get('/questions/create', [QuestionController::class, 'create'])->name('admin.questions.create');
-    Route::post('/questions', [QuestionController::class, 'store'])->name('admin.questions.store');
-    Route::get('/questions/{question}/edit', [QuestionController::class, 'edit'])->name('admin.questions.edit');
-    Route::post('/questions/{question}', [QuestionController::class, 'update'])->name('admin.questions.update');
-    Route::post('/questions/{question}/delete', [QuestionController::class, 'destroy'])->name('admin.questions.destroy');
+    Route::post('/courses/{course}/questions', [CourseController::class, 'addQuestion'])->name('admin.courses.questions.add');
+    Route::post('/questions/{question}/delete', [CourseController::class, 'deleteQuestion'])->name('admin.courses.questions.delete');
     
-    // Answers management for questions
-    Route::post('/questions/{question}/answers', [QuestionController::class, 'storeAnswer'])->name('admin.questions.answers.store');
-    Route::post('/questions/answers/{answer}', [QuestionController::class, 'updateAnswer'])->name('admin.questions.answers.update');
-    Route::post('/questions/answers/{answer}/delete', [QuestionController::class, 'destroyAnswer'])->name('admin.questions.answers.destroy');
+    Route::get('/questions', [QuestionController::class, 'index'])->name('admin.questions.index');
 });

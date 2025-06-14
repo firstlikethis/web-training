@@ -9,11 +9,13 @@ class Course extends Model
 {
     use HasFactory;
     
+    // แก้ไขใน Model Course.php เพิ่มฟิลด์
     protected $fillable = [
         'title',
         'description',
         'thumbnail',
         'video_path',
+        'video_url',  // เพิ่มฟิลด์นี้
         'duration_seconds',
         'is_active',
     ];

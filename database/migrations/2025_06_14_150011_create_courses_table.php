@@ -18,7 +18,8 @@ class CreateCoursesTable extends Migration
             $table->string('title');
             $table->text('description')->nullable();
             $table->string('thumbnail')->nullable();
-            $table->string('video_path');
+            $table->string('video_path')->nullable(); // เปลี่ยนเป็น nullable
+            $table->string('video_url')->nullable(); // เพิ่มฟิลด์นี้
             $table->integer('duration_seconds')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
