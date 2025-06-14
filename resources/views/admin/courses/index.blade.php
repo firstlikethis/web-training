@@ -1,0 +1,78 @@
+@extends('layouts.admin')
+
+@section('title', 'จัดการคอร์ส - Admin Dashboard')
+
+@section('page-title', 'จัดการคอร์ส')
+
+@section('content')
+    <div class="mb-6 flex justify-between items-center">
+        <p class="text-gray-600">จัดการคอร์สทั้งหมดในระบบ</p>
+        <a href="{{ route('admin.courses.create') }}" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+            <span class="mr-1">+</span> เพิ่มคอร์สใหม่
+        </a>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">คอร์ส</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">จำนวนคำถาม</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ความยาว</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">การจัดการ</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @forelse($courses as $course)
+                    <tr>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                @if($course->thumbnail)
+                                    <div class="flex-shrink-0 h-10 w-10 mr-4">
+                                        <img class="h-10 w-10 rounded-md object-cover" src="{{ asset('storage/' . $course->thumbnail) }}" alt="{{ $course->title }}">
+                                    </div>
+                                @endif
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">{{ $course->title }}</div>
+                                    <div class="text-sm text-gray-500">สร้างเมื่อ {{ $course->created_at->format('d/m/Y') }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                {{ $course->questions_count }} คำถาม
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{ floor($course->duration_seconds / 60) }} นาที {{ $course->duration_seconds % 60 }} วินาที
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $course->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                {{ $course->is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <a href="{{ route('admin.questions.index', ['course_id' => $course->id]) }}" class="text-purple-600 hover:text-purple-900 mr-3">คำถาม</a>
+                            <a href="{{ route('admin.courses.edit', $course) }}" class="text-blue-600 hover:text-blue-900 mr-3">แก้ไข</a>
+                            
+                            <form method="POST" action="{{ route('admin.courses.destroy', $course) }}" class="inline-block">
+                                @csrf
+                                <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบคอร์สนี้?')">ลบ</button>
+                            </form>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">ไม่พบข้อมูลคอร์ส</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    <div class="mt-4">
+        {{ $courses->links() }}
+    </div>
+@endsection
