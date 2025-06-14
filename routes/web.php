@@ -22,14 +22,14 @@ Route::post('/dashboard-x7cA1v', [AuthController::class, 'adminLogin']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // User routes
-Route::middleware(['auth', 'user'])->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\UserMiddleware::class])->group(function () {
     Route::get('/course/{course}', [CourseController::class, 'show'])->name('course.show');
     Route::post('/course/{course}/progress', [CourseController::class, 'saveProgress'])->name('course.progress');
     Route::post('/course/{course}/answer', [CourseController::class, 'submitAnswer'])->name('course.answer');
     Route::get('/course/{course}/summary', [CourseController::class, 'summary'])->name('course.summary');
 });
 
-Route::prefix('dashboard-x7cA1v')->middleware(['auth', 'admin'])->group(function () {
+Route::prefix('dashboard-x7cA1v')->middleware(['auth', \App\Http\Middleware\AdminMiddleware::class])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
     
     // Users management
