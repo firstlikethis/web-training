@@ -29,8 +29,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/course/{course}/summary', [CourseController::class, 'summary'])->name('course.summary');
 });
 
-// Admin routes
-Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
+Route::prefix('dashboard-x7cA1v')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
     
     // Users management
@@ -63,4 +62,3 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::post('/questions/answers/{answer}', [QuestionController::class, 'updateAnswer'])->name('admin.questions.answers.update');
     Route::post('/questions/answers/{answer}/delete', [QuestionController::class, 'destroyAnswer'])->name('admin.questions.answers.destroy');
 });
-
