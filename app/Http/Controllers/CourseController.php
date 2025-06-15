@@ -11,8 +11,12 @@ use App\Services\VideoProgressService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator; // เพิ่ม import นี้
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use getID3;
+use FFMpeg\FFMpeg;
+use FFMpeg\FFProbe;
+use FFMpeg\Coordinate\TimeCode;
 
 class CourseController extends Controller
 {
@@ -192,68 +196,12 @@ class CourseController extends Controller
     }
 
     /**
-     * แยกวิดีโอ ID จาก URL ของ YouTube
-     */
-    private function getYoutubeVideoId($url)
-    {
-        $videoId = null;
-        
-        // กรณี URL รูปแบบ youtube.com/watch?v=xxxx
-        if (strpos($url, 'youtube.com/watch') !== false) {
-            parse_str(parse_url($url, PHP_URL_QUERY), $params);
-            if (isset($params['v'])) {
-                $videoId = $params['v'];
-            }
-        }
-        // กรณี URL รูปแบบ youtu.be/xxxx
-        elseif (strpos($url, 'youtu.be/') !== false) {
-            $path = parse_url($url, PHP_URL_PATH);
-            $videoId = trim($path, '/');
-        }
-        // กรณี URL รูปแบบ youtube.com/embed/xxxx
-        elseif (strpos($url, 'youtube.com/embed/') !== false) {
-            $path = parse_url($url, PHP_URL_PATH);
-            $parts = explode('/', $path);
-            $videoId = end($parts);
-        }
-        
-        return $videoId;
-    }
-
-    /**
-     * ตรวจสอบว่า URL เป็น YouTube หรือไม่
-     */
-    private function isYoutubeUrl($url)
-    {
-        return (
-            strpos($url, 'youtube.com') !== false || 
-            strpos($url, 'youtu.be') !== false
-        );
-    }
-
-    /**
-     * แปลง YouTube URL เป็น Embed URL
-     */
-    private function convertToYoutubeEmbedUrl($url)
-    {
-        $videoId = $this->getYoutubeVideoId($url);
-        
-        if ($videoId) {
-            return "https://www.youtube.com/embed/{$videoId}";
-        }
-        
-        return null;
-    }
-
-    /**
      * บันทึกวิดีโอและนำไปสู่การสร้างคอร์ส (ขั้นตอนที่ 1)
      */
     public function storeVideo(Request $request)
     {
         $request->validate([
-            'video_type' => 'required|in:upload,url',
-            'video' => 'nullable|file|mimes:mp4,webm,ogg|max:102400',
-            'video_url' => 'nullable|string',
+            'video' => 'required|file|mimes:mp4,webm,ogg|max:102400',
         ]);
 
         try {
@@ -265,68 +213,43 @@ class CourseController extends Controller
             $course->status = 'draft';
             $course->is_active = false;
             
-            // จัดการวิดีโอ
-            $videoPath = null;
-            $videoUrl = null;
-            $durationSeconds = 0;
-
-            if ($request->video_type == 'upload' && $request->hasFile('video')) {
-                try {
-                    // ตรวจสอบขนาดไฟล์ก่อนอัปโหลด
-                    $videoFile = $request->file('video');
-                    $fileSize = $videoFile->getSize();
-                    $maxSize = min((int) ini_get('upload_max_filesize'), (int) ini_get('post_max_size')) * 1024 * 1024;
-                    
-                    if ($fileSize > $maxSize) {
-                        throw new \Exception("ไฟล์มีขนาดใหญ่เกินไป (สูงสุด: " . ($maxSize / (1024 * 1024)) . "MB)");
-                    }
-                    
-                    // ตรวจสอบสิทธิ์การเขียนไฟล์
-                    $storagePath = storage_path('app/public/videos');
-                    if (!is_dir($storagePath)) {
-                        if (!mkdir($storagePath, 0755, true)) {
-                            throw new \Exception("ไม่สามารถสร้างโฟลเดอร์ videos ได้ กรุณาตรวจสอบสิทธิ์");
-                        }
-                    }
-                    
-                    if (!is_writable($storagePath)) {
-                        throw new \Exception("ไม่สามารถเขียนไฟล์ลงในโฟลเดอร์ videos ได้ กรุณาตรวจสอบสิทธิ์");
-                    }
-                    
-                    // อัปโหลดไฟล์
-                    $videoPath = $videoFile->store('videos', 'public');
-                    
-                    if (!$videoPath) {
-                        throw new \Exception("ไม่สามารถอัปโหลดไฟล์ได้ โปรดลองอีกครั้ง");
-                    }
-                    
-                    // พยายามคำนวณความยาววิดีโอถ้ามี getID3
-                    $durationSeconds = $this->getVideoDuration($videoPath);
-                    
-                    $course->video_path = $videoPath;
-                    $course->duration_seconds = $durationSeconds;
-                } catch (\Exception $e) {
-                    throw new \Exception("อัปโหลดวิดีโอล้มเหลว: " . $e->getMessage());
-                }
-            } elseif ($request->video_type == 'url') {
-                // เอา URL ของวิดีโอที่ผู้ใช้ใส่มา
-                $videoUrl = $request->video_url;
+            // จัดการวิดีโอที่อัปโหลด
+            try {
+                // ตรวจสอบขนาดไฟล์ก่อนอัปโหลด
+                $videoFile = $request->file('video');
+                $fileSize = $videoFile->getSize();
+                $maxSize = min((int) ini_get('upload_max_filesize'), (int) ini_get('post_max_size')) * 1024 * 1024;
                 
-                // ตรวจสอบว่าเป็น YouTube URL หรือไม่
-                if ($this->isYoutubeUrl($videoUrl)) {
-                    // แปลง URL เป็น Embed URL
-                    $embedUrl = $this->convertToYoutubeEmbedUrl($videoUrl);
-                    
-                    if (!$embedUrl) {
-                        throw new \Exception("ไม่สามารถแปลง YouTube URL ได้ กรุณาตรวจสอบ URL อีกครั้ง");
-                    }
-                    
-                    $videoUrl = $embedUrl;
+                if ($fileSize > $maxSize) {
+                    throw new \Exception("ไฟล์มีขนาดใหญ่เกินไป (สูงสุด: " . ($maxSize / (1024 * 1024)) . "MB)");
                 }
                 
-                $course->video_url = $videoUrl;
-                // สำหรับ URL จะต้องมีการกรอกความยาววิดีโอในขั้นตอนถัดไป
-                $course->duration_seconds = 0;
+                // ตรวจสอบสิทธิ์การเขียนไฟล์
+                $storagePath = storage_path('app/public/videos');
+                if (!is_dir($storagePath)) {
+                    if (!mkdir($storagePath, 0755, true)) {
+                        throw new \Exception("ไม่สามารถสร้างโฟลเดอร์ videos ได้ กรุณาตรวจสอบสิทธิ์");
+                    }
+                }
+                
+                if (!is_writable($storagePath)) {
+                    throw new \Exception("ไม่สามารถเขียนไฟล์ลงในโฟลเดอร์ videos ได้ กรุณาตรวจสอบสิทธิ์");
+                }
+                
+                // อัปโหลดไฟล์
+                $videoPath = $videoFile->store('videos', 'public');
+                
+                if (!$videoPath) {
+                    throw new \Exception("ไม่สามารถอัปโหลดไฟล์ได้ โปรดลองอีกครั้ง");
+                }
+                
+                // คำนวณความยาววิดีโอโดยใช้ getID3
+                $durationSeconds = $this->getVideoDuration($videoPath);
+                
+                $course->video_path = $videoPath;
+                $course->duration_seconds = $durationSeconds;
+            } catch (\Exception $e) {
+                throw new \Exception("อัปโหลดวิดีโอล้มเหลว: " . $e->getMessage());
             }
             
             $course->save();
@@ -366,7 +289,6 @@ class CourseController extends Controller
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'thumbnail' => 'nullable|image|max:2048',
-                'duration_seconds' => 'nullable|integer|min:0',
                 'is_active' => 'boolean',
                 // คำถามเป็น optional
                 'questions' => 'nullable|array',
@@ -424,7 +346,6 @@ class CourseController extends Controller
                 'title' => 'nullable|string|max:255',
                 'description' => 'nullable|string',
                 'thumbnail' => 'nullable|image|max:2048',
-                'duration_seconds' => 'nullable|integer|min:0',
                 'is_active' => 'boolean',
             ]);
             
@@ -446,12 +367,6 @@ class CourseController extends Controller
                 $course->title = $request->title;
             }
             $course->description = $request->description;
-            
-            // อัปเดตความยาววิดีโอ (สำหรับ URL วิดีโอ)
-            if ($course->video_url && $request->has('duration_seconds')) {
-                $course->duration_seconds = $request->duration_seconds;
-            }
-            
             $course->is_active = $request->has('is_active');
             
             // เปลี่ยนสถานะเป็น published เฉพาะเมื่อกดปุ่ม "เผยแพร่"
@@ -613,7 +528,6 @@ class CourseController extends Controller
 
                 $videoPath = $request->file('video')->store('videos', 'public');
                 $course->video_path = $videoPath;
-                $course->video_url = null; // ล้าง URL ถ้ามีการอัปโหลดไฟล์
                 
                 // คำนวณความยาววิดีโอใหม่
                 $course->duration_seconds = $this->getVideoDuration($videoPath);
@@ -733,51 +647,46 @@ class CourseController extends Controller
             return back()->withErrors(['error' => 'เกิดข้อผิดพลาดในการลบข้อมูล: ' . $e->getMessage()]);
         }
     }
-    
+   
     /**
-     * คำนวณความยาววิดีโอในวินาที
+     * คำนวณความยาววิดีโอในวินาทีโดยใช้ PHP-FFmpeg
+     * 
+     * @param string $videoPath
+     * @return int
      */
     private function getVideoDuration($videoPath)
     {
         try {
-            // วิธีที่ 1: ใช้ getID3 library (ถ้ามี)
-            if (class_exists('\getID3')) {
-                Log::info('Using getID3 to get video duration');
-                $getID3 = new \getID3();
-                $fullPath = storage_path('app/public/' . $videoPath);
-                
-                if (!file_exists($fullPath)) {
-                    Log::error("Video file not found: " . $fullPath);
-                    throw new \Exception("Video file not found");
-                }
-                
-                $fileInfo = $getID3->analyze($fullPath);
-                
-                if (isset($fileInfo['playtime_seconds'])) {
-                    Log::info('Video duration detected: ' . $fileInfo['playtime_seconds'] . ' seconds');
-                    return (int) $fileInfo['playtime_seconds'];
-                } else {
-                    Log::warning("playtime_seconds not found in getID3 analysis");
-                }
-            } else {
-                Log::warning('getID3 class not found, using file size method');
+            $fullPath = storage_path('app/public/' . $videoPath);
+            
+            if (!file_exists($fullPath)) {
+                Log::error("Video file not found: " . $fullPath);
+                throw new \Exception("Video file not found");
             }
             
-            // วิธีที่ 2: ประมาณจากขนาดไฟล์
-            $fileSize = Storage::disk('public')->size($videoPath); // ขนาดไฟล์ในหน่วย bytes
-            $fileSizeInMB = $fileSize / (1024 * 1024); // แปลงเป็น MB
+            // ใช้ FFProbe จาก Service Container
+            $ffprobe = app('ffprobe');
             
-            // ประมาณว่า 1MB ≈ 10 วินาที (ปรับได้ตามคุณภาพวิดีโอทั่วไป)
+            // ดึงความยาววิดีโอ
+            $duration = $ffprobe->format($fullPath)->get('duration');
+            
+            if (is_numeric($duration)) {
+                $durationSeconds = (int) $duration;
+                Log::info('Video duration detected with PHP-FFmpeg: ' . $durationSeconds . ' seconds');
+                return $durationSeconds;
+            } else {
+                throw new \Exception("Could not determine video duration with PHP-FFmpeg");
+            }
+        } catch (\Exception $e) {
+            Log::error("Error getting video duration with PHP-FFmpeg: " . $e->getMessage());
+            
+            // ใช้การประมาณจากขนาดไฟล์เป็นทางเลือกสุดท้าย
+            $fileSize = Storage::disk('public')->size($videoPath);
+            $fileSizeInMB = $fileSize / (1024 * 1024);
             $estimatedDuration = round($fileSizeInMB * 10);
             
-            // ขั้นต่ำ 30 วินาที
             Log::info('Estimated video duration from file size: ' . max(30, $estimatedDuration) . ' seconds');
             return max(30, $estimatedDuration);
-            
-        } catch (\Exception $e) {
-            Log::error("Error getting video duration: " . $e->getMessage());
-            // ถ้าเกิดข้อผิดพลาด ให้ใช้ค่าเริ่มต้น
-            return 60; // กำหนดค่าเริ่มต้น 60 วินาที
         }
     }
 }

@@ -61,7 +61,7 @@
                     
                     <input type="file" name="video" id="video" accept="video/mp4,video/webm,video/ogg" 
                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                    <p class="text-sm text-gray-500 mt-1">อัปโหลดเฉพาะเมื่อต้องการเปลี่ยนวิดีโอ (ระบบจะคำนวณความยาววิดีโอใหม่โดยอัตโนมัติ)</p>
+                    <p class="text-sm text-gray-500 mt-1">อัปโหลดเฉพาะเมื่อต้องการเปลี่ยนวิดีโอ (ระบบจะคำนวณความยาววิดีโอใหม่โดยอัตโนมัติด้วย getID3)</p>
                     
                     @error('video')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>

@@ -11,15 +11,14 @@ class VideoPlayer {
         this.allowedTime = 0;
         this.isWatching = false;
         this.isCompleted = false;
-        this.isYouTube = !videoElement || videoElement.tagName !== 'VIDEO';
         
-        if (!this.isYouTube) {
+        if (this.video) {
             this.initEvents();
         }
     }
     
     /**
-     * กำหนด Event listeners สำหรับวิดีโอปกติ (ไม่ใช่ YouTube)
+     * กำหนด Event listeners สำหรับวิดีโอ
      */
     initEvents() {
         if (!this.video) return;
@@ -59,7 +58,7 @@ class VideoPlayer {
     setQuestionTimes(times) {
         this.questionTimes = times.sort((a, b) => a - b);
         
-        // กำหนดฟังก์ชันสำหรับเช็คคำถามสำหรับ YouTube
+        // กำหนดฟังก์ชันสำหรับเช็คคำถาม
         window.checkQuestionTime = (currentTime) => {
             if (this.questionTimes.length === 0) {
                 return;
@@ -69,11 +68,7 @@ class VideoPlayer {
             
             if (currentTime >= nextQuestionTime) {
                 // แสดงคำถาม
-                if (this.isYouTube) {
-                    window.pauseYoutubeVideo();
-                } else {
-                    this.video.pause();
-                }
+                this.video.pause();
                 
                 this.questionCallback(nextQuestionTime);
                 
@@ -99,8 +94,6 @@ class VideoPlayer {
      * บันทึกความคืบหน้าในการดูวิดีโอ
      */
     saveProgress(isCompleted = false) {
-        if (this.isYouTube) return; // YouTube จะจัดการในไฟล์ของตัวเอง
-        
         const currentTime = Math.floor(this.video.currentTime);
         
         // บันทึกทุก 10 วินาที หรือเมื่อจบวิดีโอ
@@ -118,9 +111,7 @@ class VideoPlayer {
      * ดำเนินการเล่นวิดีโอต่อหลังจากตอบคำถามเสร็จ
      */
     continueAfterQuestion() {
-        if (this.isYouTube) {
-            window.playYoutubeVideo();
-        } else if (this.video) {
+        if (this.video) {
             this.video.play();
         }
     }

@@ -25,13 +25,6 @@
                         เบราว์เซอร์ของคุณไม่รองรับการเล่นวิดีโอ HTML5
                     </video>
                     <p class="mt-2 text-sm text-gray-600">ความยาววิดีโอ: {{ floor($course->duration_seconds / 60) }} นาที {{ $course->duration_seconds % 60 }} วินาที</p>
-                @elseif($course->video_url)
-                    <iframe 
-                        class="w-full h-full"
-                        src="{{ $course->video_url }}" 
-                        allowfullscreen
-                    ></iframe>
-                    <p class="mt-2 text-sm text-gray-600">คุณต้องระบุความยาววิดีโอด้านล่าง</p>
                 @endif
             </div>
         </div>
@@ -69,19 +62,6 @@
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                     @enderror
                 </div>
-                
-                @if($course->video_url)
-                <div>
-                    <label for="duration_seconds" class="block text-sm font-medium text-gray-700 mb-1">ความยาววิดีโอ (วินาที)</label>
-                    <input type="number" name="duration_seconds" id="duration_seconds" min="0" value="{{ old('duration_seconds', $course->duration_seconds) }}" 
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                    <p class="text-sm text-gray-500 mt-1">เช่น 2 นาที 30 วินาที = 150 วินาที</p>
-                    
-                    @error('duration_seconds')
-                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-                @endif
                 
                 <div class="flex items-center">
                     <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}

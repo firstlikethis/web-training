@@ -48,7 +48,6 @@
             // Get video element
             const videoElement = document.getElementById('training-video');
             const courseId = "{{ $course->id }}";
-            const isYouTube = {{ $course->video_url ? 'true' : 'false' }};
             
             // Get questions data
             const questionsData = JSON.parse(document.getElementById('questions-data').dataset.questions || '[]');

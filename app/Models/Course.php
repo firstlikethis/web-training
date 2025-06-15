@@ -14,7 +14,6 @@ class Course extends Model
         'description',
         'thumbnail',
         'video_path',
-        'video_url',
         'duration_seconds',
         'is_active',
         'status',
@@ -25,7 +24,6 @@ class Course extends Model
         'is_active' => 'boolean',
     ];
     
-    // Relationships
     public function questions()
     {
         return $this->hasMany(Question::class);
@@ -41,7 +39,6 @@ class Course extends Model
         return $this->hasMany(UserAnswer::class);
     }
     
-    // Scopes
     public function scopeActive($query)
     {
         return $query->where('is_active', true)->where('status', 'published');
@@ -57,13 +54,11 @@ class Course extends Model
         return $query->where('status', 'published');
     }
     
-    // Check if course is in draft state
     public function isDraft()
     {
         return $this->status === 'draft';
     }
     
-    // Check if course is published
     public function isPublished()
     {
         return $this->status === 'published';
