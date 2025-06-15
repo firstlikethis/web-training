@@ -11,12 +11,11 @@
             <source src="{{ asset('storage/' . $course->video_path) }}" type="video/mp4">
             เบราว์เซอร์ของคุณไม่รองรับการเล่นวิดีโอ HTML5
         </video>
-    @endif
-    
-    @if(isset($userProgress) && $userProgress->current_time > 0 && !$userProgress->is_completed)
-        <div class="bg-white text-gray-800 p-4 rounded-lg shadow-lg absolute top-4 left-4 z-10">
-            <p class="font-medium">คุณดูวิดีโอนี้ไปแล้ว {{ $userProgress->getCompletionPercentage() }}%</p>
-            <button id="resume-video" class="mt-2 bg-blue-600 text-white py-1 px-3 rounded hover:bg-blue-700 text-sm">เล่นต่อจากครั้งที่แล้ว</button>
+        
+        <div class="absolute bottom-4 right-4 z-10">
+            <div class="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm font-medium">
+                ความยาว: {{ floor($course->duration_seconds / 60) }}:{{ str_pad($course->duration_seconds % 60, 2, '0', STR_PAD_LEFT) }}
+            </div>
         </div>
     @endif
 </div>
@@ -24,15 +23,21 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const video = document.getElementById('training-video');
-        const resumeButton = document.getElementById('resume-video');
         
-        // ถ้ามีปุ่ม "เล่นต่อจากครั้งที่แล้ว" ให้ตั้งค่าเหตุการณ์คลิก
-        if (resumeButton && video) {
-            resumeButton.addEventListener('click', function() {
-                video.currentTime = {{ $userProgress->current_time ?? 0 }};
-                video.play();
-                this.parentElement.style.display = 'none';
-            });
-        }
+        if (!video) return;
+        
+        // ดึงค่าเวลาที่เคยดูล่าสุดจาก PHP
+        const lastWatchedTime = {{ $userProgress ? $userProgress->current_time : 0 }};
+        
+        // เมื่อโหลดข้อมูลวิดีโอเสร็จ ให้ตั้งค่า currentTime และเล่นวิดีโอเลย
+        video.addEventListener('loadedmetadata', function() {
+            if (lastWatchedTime > 0) {
+                console.log('Setting video position to:', lastWatchedTime);
+                video.currentTime = lastWatchedTime;
+                
+                // ถ้าต้องการให้เล่นทันที ให้เปิดบรรทัดนี้
+                // video.play();
+            }
+        });
     });
 </script>

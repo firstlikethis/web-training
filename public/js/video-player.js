@@ -13,14 +13,24 @@ class VideoPlayer {
         this.isCompleted = false;
         this.questionsProcessed = {}; // เก็บประวัติคำถามที่แสดงไปแล้ว
         
+        // ตรวจสอบค่า resumeTime ที่อาจถูกส่งมา
+        this.resumeTime = this.video ? parseInt(this.video.dataset.resumeTime || 0) : 0;
+        
         if (this.video) {
             this.initEvents();
+            
+            // ตั้งค่า lastSavedTime เริ่มต้นจาก resumeTime
+            if (this.resumeTime > 0) {
+                this.lastSavedTime = this.resumeTime;
+                this.allowedTime = this.resumeTime + 30; // อนุญาตให้ข้ามไปได้อีก 30 วินาที
+                console.log('VideoPlayer initialized with resumeTime:', this.resumeTime);
+            }
         }
     }
-    
+
     /**
-     * กำหนด Event listeners สำหรับวิดีโอ
-     */
+    * กำหนด Event listeners สำหรับวิดีโอ
+    */
     initEvents() {
         if (!this.video) return;
         
@@ -51,6 +61,7 @@ class VideoPlayer {
         // ป้องกัน user กดข้ามด้วยการ seek
         this.video.addEventListener('seeking', () => {
             if (this.video.currentTime > this.allowedTime) {
+                console.log('ป้องกันการข้าม: พยายามข้ามไป', this.video.currentTime, 'แต่ allowedTime คือ', this.allowedTime);
                 this.video.currentTime = this.allowedTime;
             }
         });
@@ -62,12 +73,37 @@ class VideoPlayer {
             this.saveProgress(true);
         });
     }
+
+    /**
+    * กำหนดเวลาที่จะแสดงคำถาม
+    */
+    setQuestionTimes(times) {
+        this.questionTimes = times.sort((a, b) => a - b);
+        
+        // สำหรับคำถามที่อาจมีการบันทึกไว้ใน questionsProcessed แล้ว
+        // ให้กรองออกไป เพื่อไม่ให้แสดงซ้ำ
+        this.questionTimes = this.questionTimes.filter(time => !this.questionsProcessed[time]);
+        console.log('กำหนดเวลาแสดงคำถามเป็น:', this.questionTimes, 'หลังจากกรองคำถามที่ตอบแล้ว');
+    }
     
     /**
      * กำหนดเวลาที่จะแสดงคำถาม
      */
     setQuestionTimes(times) {
         this.questionTimes = times.sort((a, b) => a - b);
+        
+        // ถ้า resumeTime > 0 ให้ทำการกรองคำถามที่ผ่านไปแล้ว
+        if (this.resumeTime > 0) {
+            // คำถามที่ผ่านไปแล้ว ให้ทำเครื่องหมายว่าได้แสดงไปแล้ว
+            this.questionTimes.forEach(time => {
+                if (time < this.resumeTime) {
+                    this.questionsProcessed[time] = true;
+                }
+            });
+            
+            // กรองคำถามที่ยังไม่ได้แสดง
+            this.questionTimes = this.questionTimes.filter(time => time >= this.resumeTime);
+        }
     }
     
     /**

@@ -40,7 +40,7 @@
     <script src="{{ asset('js/video-player.js') }}"></script>
     <script src="{{ asset('js/quiz-handler.js') }}"></script>
     
-    <script>
+        <script>
         // แทนที่จะใช้ data-questions attribute ที่เป็น JSON แบบเปิดเผย 
         // เราจะกำหนดค่าให้กับตัวแปร JavaScript โดยตรง
         const courseQuestions = @json($questions);
@@ -50,11 +50,22 @@
             const videoElement = document.getElementById('training-video');
             const courseId = "{{ $course->id }}";
             
+            // ดึงค่าเวลาที่เคยดูล่าสุดจาก PHP
+            const resumeTime = {{ $userProgress ? $userProgress->current_time : 0 }};
+            
             // ตรวจสอบว่ามี videoElement หรือไม่
             if (!videoElement) {
                 console.error('Video element not found');
                 return;
             }
+            
+            // ตั้งค่าเวลาเริ่มต้นของวิดีโอตามที่เคยดูไว้
+            videoElement.addEventListener('loadedmetadata', function() {
+                if (resumeTime > 0) {
+                    console.log('วิดีโอพร้อมเล่น - ตั้งค่าตำแหน่งเริ่มต้นเป็น:', resumeTime);
+                    videoElement.currentTime = resumeTime;
+                }
+            });
             
             // เรียกใช้ CSRF token
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -142,11 +153,27 @@
             // Initialize VideoPlayer หลังจากเตรียม QuizHandler
             const videoPlayer = new VideoPlayer(videoElement, showQuestion, saveProgress);
             
+            // กำหนดค่าเริ่มต้นสำหรับการเล่นต่อ
+            if (resumeTime > 0) {
+                videoPlayer.lastSavedTime = resumeTime;
+                videoPlayer.allowedTime = resumeTime + 30; // อนุญาตให้ข้ามไปได้อีก 30 วินาที
+            }
+            
             // กำหนดเวลาที่จะแสดงคำถาม
             if (courseQuestions && courseQuestions.length > 0) {
                 const questionTimes = courseQuestions.map(q => parseInt(q.time_to_show));
                 videoPlayer.setQuestionTimes(questionTimes);
                 console.log('เวลาที่จะแสดงคำถาม:', questionTimes);
+                
+                // ตรวจสอบคำถามที่ผ่านไปแล้ว
+                if (resumeTime > 0) {
+                    questionTimes.forEach(time => {
+                        if (time < resumeTime) {
+                            // คำถามที่ผ่านไปแล้ว ให้ทำเครื่องหมายว่าได้แสดงไปแล้ว
+                            videoPlayer.questionsProcessed[time] = true;
+                        }
+                    });
+                }
             } else {
                 videoPlayer.setQuestionTimes([]);
             }
