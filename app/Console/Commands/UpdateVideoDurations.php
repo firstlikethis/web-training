@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\Course;
-use FFMpeg\FFProbe;
 use Illuminate\Support\Facades\Log;
 
 class UpdateVideoDurations extends Command
@@ -16,6 +15,9 @@ class UpdateVideoDurations extends Command
     {
         $courses = Course::whereNotNull('video_path')->get();
         $count = 0;
+        $errors = 0;
+        
+        $this->info("Starting to update video durations for {$courses->count()} courses...");
         
         foreach ($courses as $course) {
             try {
@@ -23,6 +25,7 @@ class UpdateVideoDurations extends Command
                 
                 if (!file_exists($fullPath)) {
                     $this->warn("File not found: {$course->video_path}");
+                    $errors++;
                     continue;
                 }
                 
@@ -36,13 +39,17 @@ class UpdateVideoDurations extends Command
                     
                     $this->info("Updated course ID {$course->id}: {$durationSeconds} seconds");
                     $count++;
+                } else {
+                    $this->warn("Could not determine duration for course ID {$course->id}");
+                    $errors++;
                 }
             } catch (\Exception $e) {
                 $this->error("Error processing course ID {$course->id}: {$e->getMessage()}");
                 Log::error("Error updating video duration: " . $e->getMessage());
+                $errors++;
             }
         }
         
-        $this->info("Successfully updated {$count} courses.");
+        $this->info("Task completed: {$count} courses updated successfully, {$errors} errors encountered.");
     }
 }

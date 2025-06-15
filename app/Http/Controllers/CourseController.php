@@ -683,7 +683,7 @@ class CourseController extends Controller
             // ใช้การประมาณจากขนาดไฟล์เป็นทางเลือกสุดท้าย
             $fileSize = Storage::disk('public')->size($videoPath);
             $fileSizeInMB = $fileSize / (1024 * 1024);
-            $estimatedDuration = round($fileSizeInMB * 10);
+            $estimatedDuration = round($fileSizeInMB * 10); // ประมาณ 10 วินาทีต่อ 1MB
             
             Log::info('Estimated video duration from file size: ' . max(30, $estimatedDuration) . ' seconds');
             return max(30, $estimatedDuration);
