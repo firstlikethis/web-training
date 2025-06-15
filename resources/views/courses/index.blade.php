@@ -14,7 +14,11 @@
         @if($courses->count() > 0)
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach($courses as $course)
-                    <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform transform hover:scale-105">
+                    @auth
+                        <a href="{{ route('course.show', $course) }}" class="block bg-white rounded-lg shadow-md overflow-hidden transition-transform transform hover:scale-105 cursor-pointer">
+                    @else
+                        <a href="#" onclick="submitLoginForm('course-{{ $course->id }}')" class="block bg-white rounded-lg shadow-md overflow-hidden transition-transform transform hover:scale-105 cursor-pointer">
+                    @endauth
                         <div class="relative">
                             @if($course->thumbnail)
                                 <img src="{{ asset('storage/' . $course->thumbnail) }}" alt="{{ $course->title }}" class="w-full h-48 object-cover">
@@ -38,29 +42,21 @@
                                 {{ $course->description ?? 'ไม่มีคำอธิบาย' }}
                             </p>
                             
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-500">
-                                    {{ $course->questions->count() }} คำถาม
-                                </span>
-                                
-                                @auth
-                                    <a href="{{ route('course.show', $course) }}" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-                                        เข้าเรียน
-                                    </a>
-                                @else
-                                    <form method="POST" action="{{ route('login') }}">
-                                        @csrf
-                                        <input type="hidden" name="redirect" value="course-{{ $course->id }}">
-                                        <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-                                            เข้าเรียน
-                                        </button>
-                                    </form>
-                                @endauth
+                            <div class="text-sm text-gray-500">
+                                {{ $course->questions->count() }} คำถาม
                             </div>
                         </div>
-                    </div>
+                    </a>
                 @endforeach
             </div>
+
+            <!-- Form สำหรับ submit เข้าสู่ระบบแบบซ่อน -->
+            @guest
+                <form id="login-redirect-form" method="POST" action="{{ route('login') }}" class="hidden">
+                    @csrf
+                    <input type="hidden" name="redirect" id="login-redirect-value" value="">
+                </form>
+            @endguest
         @else
             <div class="bg-white rounded-lg shadow p-6 text-center">
                 <p class="text-gray-600">ยังไม่มีคอร์สในระบบ</p>
@@ -97,4 +93,13 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('scripts')
+<script>
+    function submitLoginForm(redirectValue) {
+        document.getElementById('login-redirect-value').value = redirectValue;
+        document.getElementById('login-redirect-form').submit();
+    }
+</script>
 @endsection

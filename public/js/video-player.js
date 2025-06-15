@@ -37,6 +37,15 @@ class VideoPlayer {
         this.video.addEventListener('timeupdate', () => {
             this.checkQuestionTime();
             this.saveProgress();
+            
+            // ตรวจสอบว่าวิดีโอเล่นจบหรือใกล้จบหรือยัง
+            if (this.video.duration > 0 && 
+                !this.isCompleted && 
+                this.video.currentTime >= this.video.duration - 0.5) {
+                console.log('Video about to end, marking as completed');
+                this.isCompleted = true;
+                this.saveProgress(true);
+            }
         });
         
         // ป้องกัน user กดข้ามด้วยการ seek
@@ -48,6 +57,7 @@ class VideoPlayer {
         
         // เมื่อวิดีโอจบ
         this.video.addEventListener('ended', () => {
+            console.log('Video ended event triggered!');
             this.isCompleted = true;
             this.saveProgress(true);
         });
@@ -104,11 +114,12 @@ class VideoPlayer {
         
         // บันทึกทุก 10 วินาที หรือเมื่อจบวิดีโอ
         if (isCompleted || currentTime > this.lastSavedTime + 10) {
+            console.log('Saving progress, isCompleted:', isCompleted, 'currentTime:', currentTime);
             this.lastSavedTime = currentTime;
             this.allowedTime = currentTime + 30; // อนุญาตให้ข้ามไปได้อีก 30 วินาที
             
             if (this.progressCallback) {
-                this.progressCallback(currentTime, isCompleted || this.isCompleted);
+                this.progressCallback(currentTime, isCompleted);
             }
         }
     }

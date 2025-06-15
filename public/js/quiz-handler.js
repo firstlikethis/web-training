@@ -47,15 +47,43 @@ class QuizHandler {
         // สร้างตัวเลือกคำตอบ
         answersContainer.innerHTML = '';
         
+        // สร้างชื่อกลุ่ม radio buttons ที่ไม่ซ้ำกัน
+        const radioGroupName = `question-${this.currentQuestion.id}-answers`;
+        
         // สุ่มลำดับของตัวเลือกคำตอบ
         const shuffledAnswers = [...this.currentQuestion.answers].sort(() => Math.random() - 0.5);
         
         shuffledAnswers.forEach(answer => {
             const answerDiv = document.createElement('div');
             answerDiv.className = 'quiz-answer';
-            answerDiv.dataset.answerId = answer.id;
-            answerDiv.textContent = answer.answer_text;
-            answerDiv.addEventListener('click', () => this.selectAnswer(answer.id));
+            
+            // สร้าง radio button
+            const radioInput = document.createElement('input');
+            radioInput.type = 'radio';
+            radioInput.name = radioGroupName;
+            radioInput.id = `answer-${answer.id}`;
+            radioInput.value = answer.id;
+            radioInput.dataset.answerId = answer.id;
+            
+            // เพิ่ม event listener ที่ radio button เพื่อส่งคำตอบอัตโนมัติเมื่อเลือก
+            radioInput.addEventListener('change', () => {
+                if (radioInput.checked) {
+                    // ให้เวลาผู้ใช้ได้เห็นว่าเลือกแล้วซักครู่ก่อนที่จะเก็บคำตอบและซ่อน modal
+                    setTimeout(() => {
+                        this.submitAnswer(answer.id);
+                    }, 500);
+                }
+            });
+            
+            // สร้าง label สำหรับ radio button
+            const label = document.createElement('label');
+            label.htmlFor = `answer-${answer.id}`;
+            label.textContent = answer.answer_text;
+            
+            // เพิ่ม elements เข้าไปใน answer div
+            answerDiv.appendChild(radioInput);
+            answerDiv.appendChild(label);
+            
             answersContainer.appendChild(answerDiv);
         });
         
@@ -65,12 +93,6 @@ class QuizHandler {
         
         // แสดง modal
         modal.classList.remove('hidden');
-        
-        // เพิ่ม event listener สำหรับปุ่มตอบคำถาม
-        const submitButton = document.getElementById('submit-answer');
-        if (submitButton) {
-            submitButton.onclick = () => this.submitAnswer();
-        }
         
         return true;
     }
@@ -112,55 +134,54 @@ class QuizHandler {
     }
     
     /**
-     * เลือกคำตอบ
-     */
-    selectAnswer(answerId) {
-        // ล้างการเลือกเดิม
-        const answers = document.querySelectorAll('.quiz-answer');
-        answers.forEach(answer => {
-            answer.classList.remove('selected');
-        });
-        
-        // เลือกคำตอบใหม่
-        const selectedAnswer = document.querySelector(`.quiz-answer[data-answer-id="${answerId}"]`);
-        if (selectedAnswer) {
-            selectedAnswer.classList.add('selected');
-        }
-    }
-    
-    /**
      * ส่งคำตอบอัตโนมัติเมื่อหมดเวลา
      */
     autoSubmit() {
         clearInterval(this.timerInterval);
         
         // ถ้าไม่มีการเลือกคำตอบ ให้เลือกแบบสุ่ม
-        const selectedAnswer = document.querySelector('.quiz-answer.selected');
-        if (!selectedAnswer) {
-            const answers = document.querySelectorAll('.quiz-answer');
-            if (answers.length > 0) {
-                const randomIndex = Math.floor(Math.random() * answers.length);
-                this.selectAnswer(answers[randomIndex].dataset.answerId);
+        const radioGroupName = `question-${this.currentQuestion.id}-answers`;
+        const selectedRadio = document.querySelector(`input[name="${radioGroupName}"]:checked`);
+        
+        if (!selectedRadio) {
+            const allRadios = document.querySelectorAll(`input[name="${radioGroupName}"]`);
+            if (allRadios.length > 0) {
+                const randomIndex = Math.floor(Math.random() * allRadios.length);
+                allRadios[randomIndex].checked = true;
+                this.submitAnswer(allRadios[randomIndex].value);
+                return;
             }
         }
         
-        this.submitAnswer();
+        this.submitAnswer(selectedRadio ? selectedRadio.value : null);
     }
     
     /**
      * ส่งคำตอบ
      */
-    submitAnswer() {
+    submitAnswer(answerId) {
         clearInterval(this.timerInterval);
         
-        const selectedAnswer = document.querySelector('.quiz-answer.selected');
-        if (!selectedAnswer) {
-            alert('กรุณาเลือกคำตอบ');
-            this.startTimer(); // เริ่มนับเวลาใหม่
-            return;
+        if (!answerId) {
+            // ถ้าไม่มี answerId ให้เลือกคำตอบแรก
+            const radioGroupName = `question-${this.currentQuestion.id}-answers`;
+            const firstRadio = document.querySelector(`input[name="${radioGroupName}"]`);
+            if (firstRadio) {
+                firstRadio.checked = true;
+                answerId = firstRadio.value;
+            } else {
+                console.error('ไม่พบตัวเลือกคำตอบใด ๆ');
+                // อาจจะให้ซ่อน modal และเล่นวิดีโอต่อในกรณีที่เกิดข้อผิดพลาด
+                const modal = document.getElementById('quiz-modal');
+                modal.classList.add('hidden');
+                
+                if (this.completedCallback) {
+                    this.completedCallback();
+                }
+                return;
+            }
         }
         
-        const answerId = selectedAnswer.dataset.answerId;
         const answerTime = Math.round((Date.now() - this.startTime) / 1000);
         
         // ซ่อน modal

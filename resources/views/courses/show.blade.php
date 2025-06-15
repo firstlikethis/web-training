@@ -59,34 +59,10 @@
             // เรียกใช้ CSRF token
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             
-            // Initialize QuizHandler ก่อน เพื่อให้พร้อมรับคำถาม
-            const quizHandler = new QuizHandler(courseId, submitAnswer, completeQuiz);
-            
-            // กำหนดคำถามให้ QuizHandler
-            if (courseQuestions && courseQuestions.length > 0) {
-                quizHandler.setQuestions(courseQuestions);
-            }
-            
-            // ฟังก์ชันที่จะถูกเรียกเมื่อถึงเวลาแสดงคำถาม
-            function showQuestion(time) {
-                console.log(`แสดงคำถามที่เวลา ${time} วินาที`);
-                quizHandler.showQuestion(time);
-            }
-            
-            // Initialize VideoPlayer หลังจากเตรียม QuizHandler
-            const videoPlayer = new VideoPlayer(videoElement, showQuestion, saveProgress);
-            
-            // กำหนดเวลาที่จะแสดงคำถาม
-            if (courseQuestions && courseQuestions.length > 0) {
-                const questionTimes = courseQuestions.map(q => parseInt(q.time_to_show));
-                videoPlayer.setQuestionTimes(questionTimes);
-                console.log('เวลาที่จะแสดงคำถาม:', questionTimes);
-            } else {
-                videoPlayer.setQuestionTimes([]);
-            }
-            
             // บันทึกความคืบหน้าในการดูวิดีโอ
             function saveProgress(currentTime, isCompleted) {
+                console.log('Saving progress, currentTime:', currentTime, 'isCompleted:', isCompleted);
+                
                 fetch(`/course/${courseId}/progress`, {
                     method: 'POST',
                     headers: {
@@ -100,8 +76,11 @@
                 })
                 .then(response => response.json())
                 .then(data => {
+                    console.log('Progress saved:', data);
+                    
                     // If video is completed, redirect to summary page
                     if (isCompleted) {
+                        console.log('Video completed, redirecting to summary page');
                         window.location.href = `/course/${courseId}/summary`;
                     }
                 })
@@ -112,6 +91,8 @@
             
             // บันทึกคำตอบ
             function submitAnswer(questionId, answerId, answerTime) {
+                console.log('Submitting answer:', questionId, answerId, answerTime);
+                
                 fetch(`/course/${courseId}/answer`, {
                     method: 'POST',
                     headers: {
@@ -126,6 +107,7 @@
                 })
                 .then(response => response.json())
                 .then(data => {
+                    console.log('Answer submitted:', data);
                     // Continue video playback
                     videoPlayer.continueAfterQuestion();
                 })
@@ -139,6 +121,34 @@
             // เมื่อตอบคำถามครบทุกข้อ
             function completeQuiz() {
                 console.log('ตอบคำถามครบทุกข้อแล้ว');
+            }
+            
+            // ฟังก์ชันที่จะถูกเรียกเมื่อถึงเวลาแสดงคำถาม
+            function showQuestion(time) {
+                console.log(`แสดงคำถามที่เวลา ${time} วินาที`);
+                const result = quizHandler.showQuestion(time);
+                console.log('Show question result:', result);
+            }
+            
+            // Initialize QuizHandler ก่อน เพื่อให้พร้อมรับคำถาม
+            const quizHandler = new QuizHandler(courseId, submitAnswer, completeQuiz);
+            
+            // กำหนดคำถามให้ QuizHandler
+            if (courseQuestions && courseQuestions.length > 0) {
+                quizHandler.setQuestions(courseQuestions);
+                console.log('Questions loaded:', courseQuestions.length);
+            }
+            
+            // Initialize VideoPlayer หลังจากเตรียม QuizHandler
+            const videoPlayer = new VideoPlayer(videoElement, showQuestion, saveProgress);
+            
+            // กำหนดเวลาที่จะแสดงคำถาม
+            if (courseQuestions && courseQuestions.length > 0) {
+                const questionTimes = courseQuestions.map(q => parseInt(q.time_to_show));
+                videoPlayer.setQuestionTimes(questionTimes);
+                console.log('เวลาที่จะแสดงคำถาม:', questionTimes);
+            } else {
+                videoPlayer.setQuestionTimes([]);
             }
         });
     </script>

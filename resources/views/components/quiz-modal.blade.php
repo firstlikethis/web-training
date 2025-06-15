@@ -12,20 +12,17 @@
                 <!-- คำตอบจะถูกเพิ่มโดย JavaScript -->
             </div>
         </div>
-        
-        <div class="flex justify-end">
-            <button id="submit-answer" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">ตอบคำถาม</button>
-        </div>
     </div>
 </div>
 
 <style>
     /* สไตล์สำหรับ quiz-modal */
     .quiz-answer {
-        @apply border border-gray-300 rounded-lg p-4 mb-2 cursor-pointer hover:bg-gray-100 transition-colors;
+        @apply border border-gray-300 rounded-lg p-4 mb-2 cursor-pointer hover:bg-gray-100 transition-colors flex items-center;
     }
-    .quiz-answer.selected {
-        @apply bg-blue-100 border-blue-500 border-2;
+    
+    .quiz-answer input[type="radio"] {
+        @apply mr-3 h-5 w-5;
     }
     
     /* อนิเมชัน */
