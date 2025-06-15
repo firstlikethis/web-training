@@ -24,16 +24,21 @@ class VideoProgressService
             'course_id' => $course->id,
         ]);
         
-        // Only update if the new time is greater than the saved time
-        if ($currentTime > $progress->current_time) {
+        if ($currentTime > $progress->current_time || ($isCompleted && !$progress->is_completed)) {
             $progress->current_time = $currentTime;
+            
+            // คำนวณเปอร์เซ็นต์ความคืบหน้า
+            if ($course->duration_seconds > 0) {
+                $progress->progress_percentage = min(100, round(($currentTime / $course->duration_seconds) * 100));
+            }
+            
+            // หากดูถึง 95% ของวิดีโอแล้ว ถือว่าเรียนจบ
+            if ($currentTime >= ($course->duration_seconds * 1) || $isCompleted) {
+                $progress->is_completed = true;
+            }
+            
+            $progress->save();
         }
-        
-        if ($isCompleted) {
-            $progress->is_completed = true;
-        }
-        
-        $progress->save();
         
         return $progress;
     }

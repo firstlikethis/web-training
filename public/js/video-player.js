@@ -12,6 +12,7 @@ class VideoPlayer {
         this.isWatching = false;
         this.isCompleted = false;
         this.questionsProcessed = {}; // เก็บประวัติคำถามที่แสดงไปแล้ว
+        this.saveProgressInterval = null; // เพิ่มตัวแปรสำหรับเก็บ interval
         
         // ตรวจสอบค่า resumeTime ที่อาจถูกส่งมา
         this.resumeTime = this.video ? parseInt(this.video.dataset.resumeTime || 0) : 0;
@@ -37,25 +38,21 @@ class VideoPlayer {
         // ตรวจจับการเล่นวิดีโอ
         this.video.addEventListener('play', () => {
             this.isWatching = true;
+            // เริ่มบันทึกความคืบหน้าทุก 20 วินาที
+            this.startProgressInterval();
         });
         
         this.video.addEventListener('pause', () => {
             this.isWatching = false;
+            // หยุดบันทึกความคืบหน้าเมื่อวิดีโอถูกหยุด
+            this.stopProgressInterval();
+            // บันทึกความคืบหน้าทันทีเมื่อหยุดวิดีโอ
+            this.saveProgress();
         });
         
         // ตรวจจับการอัปเดตเวลา
         this.video.addEventListener('timeupdate', () => {
             this.checkQuestionTime();
-            this.saveProgress();
-            
-            // ตรวจสอบว่าวิดีโอเล่นจบหรือใกล้จบหรือยัง
-            if (this.video.duration > 0 && 
-                !this.isCompleted && 
-                this.video.currentTime >= this.video.duration - 0.5) {
-                console.log('Video about to end, marking as completed');
-                this.isCompleted = true;
-                this.saveProgress(true);
-            }
         });
         
         // ป้องกัน user กดข้ามด้วยการ seek
@@ -71,24 +68,41 @@ class VideoPlayer {
             console.log('Video ended event triggered!');
             this.isCompleted = true;
             this.saveProgress(true);
+            this.stopProgressInterval();
         });
+        
+        // บันทึกความคืบหน้าเมื่อผู้ใช้ออกจากหน้าเว็บ
+        window.addEventListener('beforeunload', () => {
+            this.saveProgress();
+        });
+    }
+    
+    /**
+     * เริ่มการบันทึกความคืบหน้าตามช่วงเวลา
+     */
+    startProgressInterval() {
+        // ล้าง interval เดิมถ้ามี
+        this.stopProgressInterval();
+        
+        // สร้าง interval ใหม่
+        this.saveProgressInterval = setInterval(() => {
+            this.saveProgress();
+        }, 20000); // บันทึกทุก 20 วินาที
+    }
+    
+    /**
+     * หยุดการบันทึกความคืบหน้าตามช่วงเวลา
+     */
+    stopProgressInterval() {
+        if (this.saveProgressInterval) {
+            clearInterval(this.saveProgressInterval);
+            this.saveProgressInterval = null;
+        }
     }
 
     /**
     * กำหนดเวลาที่จะแสดงคำถาม
     */
-    setQuestionTimes(times) {
-        this.questionTimes = times.sort((a, b) => a - b);
-        
-        // สำหรับคำถามที่อาจมีการบันทึกไว้ใน questionsProcessed แล้ว
-        // ให้กรองออกไป เพื่อไม่ให้แสดงซ้ำ
-        this.questionTimes = this.questionTimes.filter(time => !this.questionsProcessed[time]);
-        console.log('กำหนดเวลาแสดงคำถามเป็น:', this.questionTimes, 'หลังจากกรองคำถามที่ตอบแล้ว');
-    }
-    
-    /**
-     * กำหนดเวลาที่จะแสดงคำถาม
-     */
     setQuestionTimes(times) {
         this.questionTimes = times.sort((a, b) => a - b);
         
@@ -148,8 +162,8 @@ class VideoPlayer {
     saveProgress(isCompleted = false) {
         const currentTime = Math.floor(this.video.currentTime);
         
-        // บันทึกทุก 10 วินาที หรือเมื่อจบวิดีโอ
-        if (isCompleted || currentTime > this.lastSavedTime + 10) {
+        // ถ้าเป็นการบันทึกเมื่อวิดีโอจบหรือเมื่อมีการเปลี่ยนแปลงเวลาที่สำคัญ (มากกว่า 5 วินาที)
+        if (isCompleted || Math.abs(currentTime - this.lastSavedTime) > 5) {
             console.log('Saving progress, isCompleted:', isCompleted, 'currentTime:', currentTime);
             this.lastSavedTime = currentTime;
             this.allowedTime = currentTime + 30; // อนุญาตให้ข้ามไปได้อีก 30 วินาที

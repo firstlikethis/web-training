@@ -33,6 +33,15 @@ class CourseController extends Controller
     public function index()
     {
         $courses = Course::active()->orderBy('title')->get();
+        
+        // Load user progress for each course if authenticated
+        if (auth()->check()) {
+            $userId = auth()->id();
+            $courses->load(['userProgress' => function($query) use ($userId) {
+                $query->where('user_id', $userId);
+            }]);
+        }
+        
         return view('courses.index', compact('courses'));
     }
 

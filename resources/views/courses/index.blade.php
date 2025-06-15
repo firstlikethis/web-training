@@ -42,9 +42,29 @@
                                 {{ $course->description ?? 'ไม่มีคำอธิบาย' }}
                             </p>
                             
-                            <div class="text-sm text-gray-500">
+                            <div class="text-sm text-gray-500 mb-2">
                                 {{ $course->questions->count() }} คำถาม
                             </div>
+                            
+                            @auth
+                                @php
+                                    $userProgress = $course->userProgress->where('user_id', auth()->id())->first();
+                                @endphp
+                                
+                                @if($userProgress)
+                                    <div class="mt-2">
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ $userProgress->progress_percentage }}%"></div>
+                                        </div>
+                                        <div class="flex justify-between mt-1">
+                                            <span class="text-xs text-gray-500">ดูแล้ว {{ $userProgress->progress_percentage }}%</span>
+                                            @if($userProgress->is_completed)
+                                                <span class="text-xs text-green-600">เรียนจบแล้ว</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endif
+                            @endauth
                         </div>
                     </a>
                 @endforeach
