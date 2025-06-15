@@ -649,7 +649,7 @@ class CourseController extends Controller
     }
    
     /**
-     * คำนวณความยาววิดีโอในวินาทีโดยใช้ PHP-FFmpeg
+     * คำนวณความยาววิดีโอในวินาทีโดยใช้ PHP-FFmpeg หรือ fallback method
      * 
      * @param string $videoPath
      * @return int
@@ -678,7 +678,7 @@ class CourseController extends Controller
                 throw new \Exception("Could not determine video duration with PHP-FFmpeg");
             }
         } catch (\Exception $e) {
-            Log::error("Error getting video duration with PHP-FFmpeg: " . $e->getMessage());
+            Log::warning("Using fallback method to estimate video duration: " . $e->getMessage());
             
             // ใช้การประมาณจากขนาดไฟล์เป็นทางเลือกสุดท้าย
             $fileSize = Storage::disk('public')->size($videoPath);
