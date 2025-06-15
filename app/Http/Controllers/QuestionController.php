@@ -15,20 +15,36 @@ class QuestionController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Question::with(['course', 'answers']);
+        $query = Course::active();
         
-        // กรองตาม course_id ถ้ามีการระบุ
-        if ($request->has('course_id') && $request->course_id) {
-            $query->where('course_id', $request->course_id);
+        // ค้นหาตามหมวดหมู่
+        if ($request->has('category') && $request->category) {
+            $query->where('category_id', $request->category);
         }
         
-        $questions = $query->orderBy('course_id')
-            ->orderBy('time_to_show')
-            ->paginate(10);
+        // ค้นหาตามคำค้น
+        if ($request->has('search') && $request->search) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('title', 'like', "%{$searchTerm}%")
+                  ->orWhere('description', 'like', "%{$searchTerm}%");
+            });
+        }
         
-        $courses = Course::orderBy('title')->get();
+        $courses = $query->orderBy('title')->get();
         
-        return view('admin.questions.index', compact('questions', 'courses'));
+        // ดึงหมวดหมู่ทั้งหมดที่เปิดใช้งาน
+        $categories = Category::active()->orderBy('sort_order')->orderBy('name')->get();
+        
+        // Load user progress for each course if authenticated
+        if (auth()->check()) {
+            $userId = auth()->id();
+            $courses->load(['userProgress' => function($query) use ($userId) {
+                $query->where('user_id', $userId);
+            }]);
+        }
+        
+        return view('courses.index', compact('courses', 'categories'));
     }
 
     /**

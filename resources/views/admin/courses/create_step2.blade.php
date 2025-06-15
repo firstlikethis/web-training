@@ -54,6 +54,23 @@
                 </div>
                 
                 <div>
+                    <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">หมวดหมู่</label>
+                    <select name="category_id" id="category_id" 
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                        <option value="">-- ไม่มีหมวดหมู่ --</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" {{ old('category_id', $course->category_id) == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    
+                    @error('category_id')
+                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+                
+                <div>
                     <label for="thumbnail" class="block text-sm font-medium text-gray-700 mb-1">รูปภาพปก</label>
                     <input type="file" name="thumbnail" id="thumbnail" accept="image/*" 
                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">

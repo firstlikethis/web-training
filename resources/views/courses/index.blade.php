@@ -8,8 +8,55 @@
         <p class="text-gray-600 text-lg">เรียนรู้ได้ทุกที่ทุกเวลาผ่านวิดีโอและการฝึกอบรมที่ออกแบบมาเพื่อคุณโดยเฉพาะ</p>
     </div>
     
+    <!-- ส่วนค้นหาและกรองข้อมูล -->
+    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+        <form action="{{ route('home') }}" method="GET" class="flex flex-col md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4">
+            <div class="flex-1">
+                <label for="search" class="block text-sm font-medium text-gray-700 mb-1">ค้นหาคอร์ส</label>
+                <input type="text" name="search" id="search" value="{{ request('search') }}" 
+                       placeholder="ชื่อหรือคำอธิบายคอร์ส..."
+                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+            </div>
+            
+            <div class="w-full md:w-48">
+                <label for="category" class="block text-sm font-medium text-gray-700 mb-1">หมวดหมู่</label>
+                <select name="category" id="category" 
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                    <option value="">ทั้งหมด</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                            {{ $category->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            
+            <div>
+                <button type="submit" class="w-full md:w-auto bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+                    ค้นหา
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- แสดงหมวดหมู่ทั้งหมด -->
+    @if($categories->count() > 0)
+        <div class="mb-6 flex flex-wrap gap-2">
+            <a href="{{ route('home') }}" class="px-3 py-1 rounded-full text-sm {{ empty(request('category')) ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300' }}">
+                ทั้งหมด
+            </a>
+            
+            @foreach($categories as $category)
+                <a href="{{ route('home', ['category' => $category->id]) }}" 
+                   class="px-3 py-1 rounded-full text-sm {{ request('category') == $category->id ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300' }}">
+                    {{ $category->name }}
+                </a>
+            @endforeach
+        </div>
+    @endif
+    
     <div class="mb-6">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">คอร์สทั้งหมด</h2>
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">คอร์สทั้งหมด {{ request('search') || request('category') ? '(ผลการค้นหา)' : '' }}</h2>
         
         @if($courses->count() > 0)
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -33,6 +80,14 @@
                                     {{ floor($course->duration_seconds / 60) }} นาที {{ $course->duration_seconds % 60 }} วินาที
                                 </span>
                             </div>
+                            
+                            @if($course->category)
+                                <div class="absolute top-2 right-2">
+                                    <span class="px-2 py-1 bg-blue-600 text-white text-xs rounded-full">
+                                        {{ $course->category->name }}
+                                    </span>
+                                </div>
+                            @endif
                         </div>
                         
                         <div class="p-4">
@@ -79,7 +134,8 @@
             @endguest
         @else
             <div class="bg-white rounded-lg shadow p-6 text-center">
-                <p class="text-gray-600">ยังไม่มีคอร์สในระบบ</p>
+                <p class="text-gray-600">ไม่พบคอร์สที่ตรงกับการค้นหา</p>
+                <a href="{{ route('home') }}" class="mt-2 inline-block text-blue-600 hover:text-blue-800">ดูคอร์สทั้งหมด</a>
             </div>
         @endif
     </div>

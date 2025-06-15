@@ -192,8 +192,11 @@ class CourseController extends Controller
         $draftCourses = Course::where('status', 'draft')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
+            
+        // ดึงข้อมูลหมวดหมู่
+        $categories = Category::orderBy('name')->get();
 
-        return view('admin.courses.index', compact('courses', 'draftCourses'));
+        return view('admin.courses.index', compact('courses', 'draftCourses', 'categories'));
     }
 
     /**
@@ -284,7 +287,10 @@ class CourseController extends Controller
             return redirect()->route('admin.courses.edit', $course);
         }
         
-        return view('admin.courses.create_step2', compact('course'));
+        // ดึงข้อมูลหมวดหมู่
+        $categories = Category::active()->orderBy('name')->get();
+        
+        return view('admin.courses.create_step2', compact('course', 'categories'));
     }
     
     /**
@@ -298,8 +304,8 @@ class CourseController extends Controller
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'thumbnail' => 'nullable|image|max:2048',
+                'category_id' => 'nullable|exists:categories,id',
                 'is_active' => 'boolean',
-                // คำถามเป็น optional
                 'questions' => 'nullable|array',
             ]);
 
@@ -350,11 +356,11 @@ class CourseController extends Controller
                 }
             }
         } else {
-            // สำหรับ draft ใช้ validation น้อยลง
             $validator = Validator::make($request->all(), [
                 'title' => 'nullable|string|max:255',
                 'description' => 'nullable|string',
                 'thumbnail' => 'nullable|image|max:2048',
+                'category_id' => 'nullable|exists:categories,id',
                 'is_active' => 'boolean',
             ]);
             
@@ -363,7 +369,7 @@ class CourseController extends Controller
             }
         }
 
-        DB::beginTransaction();
+         DB::beginTransaction();
         try {
             // อัปโหลดไฟล์รูปภาพ
             if ($request->hasFile('thumbnail')) {
@@ -377,8 +383,8 @@ class CourseController extends Controller
             }
             $course->description = $request->description;
             $course->is_active = $request->has('is_active');
+            $course->category_id = $request->category_id; 
             
-            // เปลี่ยนสถานะเป็น published เฉพาะเมื่อกดปุ่ม "เผยแพร่"
             if ($request->has('publish')) {
                 $course->status = 'published';
             }
@@ -497,9 +503,11 @@ class CourseController extends Controller
             return redirect()->route('admin.courses.edit_details', $course);
         }
         
-        // โหลดคำถามและคำตอบ
         $course->load('questions.answers');
-        return view('admin.courses.edit', compact('course'));
+        
+        $categories = Category::active()->orderBy('name')->get();
+        
+        return view('admin.courses.edit', compact('course', 'categories'));
     }
 
     /**
@@ -512,6 +520,7 @@ class CourseController extends Controller
             'description' => 'nullable|string',
             'thumbnail' => 'nullable|image|max:2048',
             'video' => 'nullable|file|mimes:mp4,webm,ogg|max:102400',
+            'category_id' => 'nullable|exists:categories,id',
             'is_active' => 'boolean',
         ]);
 
@@ -545,6 +554,7 @@ class CourseController extends Controller
             $course->title = $request->title;
             $course->description = $request->description;
             $course->is_active = $request->has('is_active');
+            $course->category_id = $request->category_id; 
             $course->save();
 
             DB::commit();

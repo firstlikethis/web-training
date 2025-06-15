@@ -17,11 +17,13 @@ class Course extends Model
         'duration_seconds',
         'is_active',
         'status',
+        'category_id',
     ];
     
     protected $casts = [
         'duration_seconds' => 'integer',
         'is_active' => 'boolean',
+        'category_id' => 'integer',
     ];
     
     public function questions()
@@ -37,6 +39,11 @@ class Course extends Model
     public function userAnswers()
     {
         return $this->hasMany(UserAnswer::class);
+    }
+    
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
     }
     
     public function scopeActive($query)

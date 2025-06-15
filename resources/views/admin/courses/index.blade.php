@@ -73,6 +73,40 @@
     </div>
     @endif
     
+    <!-- ตัวกรองสำหรับคอร์ส -->
+    <div class="mb-6">
+        <form action="{{ route('admin.courses.index') }}" method="GET" class="bg-white p-4 rounded-lg shadow-sm">
+            <div class="flex flex-wrap gap-4 items-end">
+                <div>
+                    <label for="category_filter" class="block text-sm font-medium text-gray-700 mb-1">กรองตามหมวดหมู่</label>
+                    <select name="category" id="category_filter" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                        <option value="">ทั้งหมด</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-1">ค้นหา</label>
+                    <input type="text" name="search" id="search" value="{{ request('search') }}" placeholder="ชื่อคอร์ส..." 
+                           class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                </div>
+                <div>
+                    <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+                        กรอง
+                    </button>
+                </div>
+                @if(request('category') || request('search'))
+                    <div>
+                        <a href="{{ route('admin.courses.index') }}" class="text-gray-600 hover:text-gray-800">ล้างตัวกรอง</a>
+                    </div>
+                @endif
+            </div>
+        </form>
+    </div>
+    
     <!-- คอร์สที่เผยแพร่แล้ว (Published) -->
     <div>
         <h2 class="text-xl font-bold text-gray-800 mb-4">คอร์สที่เผยแพร่แล้ว</h2>
@@ -82,6 +116,7 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">คอร์ส</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">หมวดหมู่</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">จำนวนคำถาม</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ความยาว</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
@@ -103,6 +138,15 @@
                                         <div class="text-sm text-gray-500">สร้างเมื่อ {{ $course->created_at->format('d/m/Y') }}</div>
                                     </div>
                                 </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if($course->category)
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                        {{ $course->category->name }}
+                                    </span>
+                                @else
+                                    <span class="text-gray-500">-</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
@@ -128,7 +172,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-4 text-center text-gray-500">ไม่พบข้อมูลคอร์ส</td>
+                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">ไม่พบข้อมูลคอร์ส</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -137,7 +181,7 @@
         
         <!-- Pagination -->
         <div class="mt-4">
-            {{ $courses->links() }}
+            {{ $courses->appends(request()->except('page'))->links() }}
         </div>
     </div>
 @endsection

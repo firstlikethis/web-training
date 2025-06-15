@@ -42,6 +42,14 @@ Route::prefix('admin')->middleware(['auth', \App\Http\Middleware\AdminMiddleware
     Route::post('/users/{user}/delete', [UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('admin.users.reset-password');
     
+    // Categories management (เพิ่มส่วนนี้)
+    Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories.index');
+    Route::get('/categories/create', [CategoryController::class, 'create'])->name('admin.categories.create');
+    Route::post('/categories', [CategoryController::class, 'store'])->name('admin.categories.store');
+    Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('admin.categories.edit');
+    Route::post('/categories/{category}', [CategoryController::class, 'update'])->name('admin.categories.update');
+    Route::post('/categories/{category}/delete', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
+    
     // Courses management
     Route::get('/courses', [CourseController::class, 'adminIndex'])->name('admin.courses.index');
     Route::get('/courses/create', [CourseController::class, 'create'])->name('admin.courses.create');
