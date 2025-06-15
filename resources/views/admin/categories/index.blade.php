@@ -29,11 +29,9 @@
                     <tr>
                         <td class="px-6 py-4">
                             <div class="flex items-center">
-                                @if($category->icon)
-                                    <div class="flex-shrink-0 h-10 w-10 mr-4">
-                                        <img class="h-10 w-10 rounded-md object-cover" src="{{ asset('storage/' . $category->icon) }}" alt="{{ $category->name }}">
-                                    </div>
-                                @endif
+                                <div class="flex-shrink-0 h-10 w-10 mr-4 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
+                                    {{ strtoupper(substr($category->name, 0, 1)) }}
+                                </div>
                                 <div class="text-sm font-medium text-gray-900">{{ $category->name }}</div>
                             </div>
                         </td>

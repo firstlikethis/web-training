@@ -6,7 +6,7 @@
 
 @section('content')
     <div class="bg-white rounded-lg shadow-md p-6">
-        <form action="{{ route('admin.categories.update', $category) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('admin.categories.update', $category) }}" method="POST">
             @csrf
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -14,6 +14,7 @@
                     <label for="name" class="block text-sm font-medium text-gray-700 mb-1">ชื่อหมวดหมู่</label>
                     <input type="text" name="name" id="name" value="{{ old('name', $category->name) }}" 
                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" required>
+                    <p class="text-xs text-gray-500 mt-1">Slug จะถูกสร้างอัตโนมัติจากชื่อหมวดหมู่</p>
                     
                     @error('name')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -21,13 +22,10 @@
                 </div>
                 
                 <div>
-                    <label for="slug" class="block text-sm font-medium text-gray-700 mb-1">Slug</label>
-                    <input type="text" name="slug" id="slug" value="{{ old('slug', $category->slug) }}" 
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                    
-                    @error('slug')
-                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                    @enderror
+                    <label for="slug" class="block text-sm font-medium text-gray-700 mb-1">Slug (อ่านอย่างเดียว)</label>
+                    <input type="text" id="slug" value="{{ $category->slug }}" 
+                           class="w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" readonly>
+                    <p class="text-xs text-gray-500 mt-1">Slug จะถูกสร้างอัตโนมัติเมื่อบันทึก</p>
                 </div>
                 
                 <div class="md:col-span-2">
@@ -36,25 +34,6 @@
                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">{{ old('description', $category->description) }}</textarea>
                     
                     @error('description')
-                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-                
-                <div>
-                    <label for="icon" class="block text-sm font-medium text-gray-700 mb-1">ไอคอน</label>
-                    
-                    @if($category->icon)
-                        <div class="mb-2">
-                            <img src="{{ asset('storage/' . $category->icon) }}" alt="{{ $category->name }}" class="h-16 w-16 object-cover rounded">
-                            <p class="text-sm text-gray-500 mt-1">ไอคอนปัจจุบัน</p>
-                        </div>
-                    @endif
-                    
-                    <input type="file" name="icon" id="icon" accept="image/*" 
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                    <p class="text-sm text-gray-500 mt-1">อัปโหลดเฉพาะเมื่อต้องการเปลี่ยนไอคอน</p>
-                    
-                    @error('icon')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                     @enderror
                 </div>

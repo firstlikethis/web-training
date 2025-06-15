@@ -34,24 +34,17 @@ class CategoryController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:categories',
-            'slug' => 'nullable|string|max:255|unique:categories',
             'description' => 'nullable|string',
-            'icon' => 'nullable|image|max:1024',
             'is_active' => 'boolean',
             'sort_order' => 'nullable|integer',
         ]);
 
         $category = new Category();
         $category->name = $request->name;
-        $category->slug = $request->slug ? Str::slug($request->slug) : Str::slug($request->name);
+        $category->slug = Str::slug($request->name);
         $category->description = $request->description;
         $category->is_active = $request->has('is_active');
         $category->sort_order = $request->sort_order ?? 0;
-        
-        if ($request->hasFile('icon')) {
-            $iconPath = $request->file('icon')->store('categories', 'public');
-            $category->icon = $iconPath;
-        }
         
         $category->save();
 
@@ -74,32 +67,16 @@ class CategoryController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('categories')->ignore($category->id)],
-            'slug' => ['nullable', 'string', 'max:255', Rule::unique('categories')->ignore($category->id)],
             'description' => 'nullable|string',
-            'icon' => 'nullable|image|max:1024',
             'is_active' => 'boolean',
             'sort_order' => 'nullable|integer',
         ]);
 
         $category->name = $request->name;
-        
-        if ($request->slug) {
-            $category->slug = Str::slug($request->slug);
-        }
-        
+        $category->slug = Str::slug($request->name);
         $category->description = $request->description;
         $category->is_active = $request->has('is_active');
         $category->sort_order = $request->sort_order ?? 0;
-        
-        if ($request->hasFile('icon')) {
-            // ลบไฟล์เก่า
-            if ($category->icon) {
-                Storage::disk('public')->delete($category->icon);
-            }
-            
-            $iconPath = $request->file('icon')->store('categories', 'public');
-            $category->icon = $iconPath;
-        }
         
         $category->save();
 
@@ -118,11 +95,6 @@ class CategoryController extends Controller
         if ($coursesCount > 0) {
             return redirect()->route('admin.categories.index')
                 ->with('error', 'ไม่สามารถลบหมวดหมู่นี้ได้ เนื่องจากมีคอร์สในหมวดหมู่นี้ ' . $coursesCount . ' คอร์ส');
-        }
-        
-        // ลบไฟล์ icon
-        if ($category->icon) {
-            Storage::disk('public')->delete($category->icon);
         }
         
         $categoryName = $category->name;

@@ -6,7 +6,7 @@
 
 @section('content')
     <div class="bg-white rounded-lg shadow-md p-6">
-        <form action="{{ route('admin.categories.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('admin.categories.store') }}" method="POST">
             @csrf
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -14,18 +14,9 @@
                     <label for="name" class="block text-sm font-medium text-gray-700 mb-1">ชื่อหมวดหมู่</label>
                     <input type="text" name="name" id="name" value="{{ old('name') }}" 
                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" required>
+                    <p class="text-xs text-gray-500 mt-1">Slug จะถูกสร้างอัตโนมัติจากชื่อหมวดหมู่</p>
                     
                     @error('name')
-                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-                
-                <div>
-                    <label for="slug" class="block text-sm font-medium text-gray-700 mb-1">Slug (เว้นว่างเพื่อสร้างอัตโนมัติ)</label>
-                    <input type="text" name="slug" id="slug" value="{{ old('slug') }}" 
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                    
-                    @error('slug')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                     @enderror
                 </div>
@@ -36,16 +27,6 @@
                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">{{ old('description') }}</textarea>
                     
                     @error('description')
-                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-                
-                <div>
-                    <label for="icon" class="block text-sm font-medium text-gray-700 mb-1">ไอคอน</label>
-                    <input type="file" name="icon" id="icon" accept="image/*" 
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                    
-                    @error('icon')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                     @enderror
                 </div>
@@ -74,26 +55,4 @@
             </div>
         </form>
     </div>
-@endsection
-
-@section('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const nameInput = document.getElementById('name');
-        const slugInput = document.getElementById('slug');
-        
-        // สร้าง slug อัตโนมัติเมื่อพิมพ์ชื่อหมวดหมู่
-        nameInput.addEventListener('input', function() {
-            if (!slugInput.value) {
-                // แปลงเป็น slug
-                const slug = nameInput.value
-                    .toLowerCase()
-                    .replace(/[^\w\u0E00-\u0E7F ]/g, '')
-                    .replace(/ +/g, '-');
-                
-                slugInput.value = slug;
-            }
-        });
-    });
-</script>
 @endsection

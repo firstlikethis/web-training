@@ -7,6 +7,7 @@ use App\Models\Question;
 use App\Models\Answer;
 use App\Models\UserProgress;
 use App\Models\UserAnswer;
+use App\Models\Category; 
 use App\Services\VideoProgressService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -34,6 +35,8 @@ class CourseController extends Controller
     {
         $courses = Course::active()->orderBy('title')->get();
         
+        $categories = \App\Models\Category::active()->orderBy('sort_order')->orderBy('name')->get();
+        
         // Load user progress for each course if authenticated
         if (auth()->check()) {
             $userId = auth()->id();
@@ -42,7 +45,7 @@ class CourseController extends Controller
             }]);
         }
         
-        return view('courses.index', compact('courses'));
+        return view('courses.index', compact('courses', 'categories'));
     }
 
     /**
