@@ -10,7 +10,7 @@ class AuthController extends Controller
     /**
      * แสดงหน้า login สำหรับ user
      */
-    public function showLoginForm()
+    public function showLoginForm(Request $request)
     {
         if (Auth::check()) {
             if (Auth::user()->isAdmin()) {
@@ -37,7 +37,16 @@ class AuthController extends Controller
             
             // ถ้ามี redirect parameter ให้ redirect ไป URL นั้น
             if ($request->has('redirect')) {
-                return redirect($request->redirect);
+                // ตรวจสอบรูปแบบของ redirect
+                $redirect = $request->redirect;
+                
+                // ตรวจสอบถ้า redirect มีรูปแบบ course-X
+                if (preg_match('/^course-(\d+)$/', $redirect, $matches)) {
+                    $courseId = $matches[1];
+                    return redirect()->route('course.show', ['course' => $courseId]);
+                }
+                
+                return redirect($redirect);
             }
             
             // ถ้าเป็น admin ให้ redirect ไปหน้า admin dashboard

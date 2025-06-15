@@ -6,7 +6,7 @@ class QuizHandler {
         this.courseId = courseId;
         this.submitCallback = submitCallback;
         this.completedCallback = completedCallback;
-        this.questions = {};
+        this.questions = {}; // เก็บคำถามในรูปแบบ { time_to_show: question }
         this.currentQuestion = null;
         this.startTime = null;
         this.timerInterval = null;
@@ -26,7 +26,9 @@ class QuizHandler {
      * แสดงคำถาม
      */
     showQuestion(timeToShow) {
+        // ตรวจสอบว่ามีคำถามที่เวลานี้หรือไม่
         if (!this.questions[timeToShow]) {
+            console.error(`ไม่พบคำถามที่เวลา ${timeToShow}`);
             return false;
         }
         
@@ -64,6 +66,12 @@ class QuizHandler {
         // แสดง modal
         modal.classList.remove('hidden');
         
+        // เพิ่ม event listener สำหรับปุ่มตอบคำถาม
+        const submitButton = document.getElementById('submit-answer');
+        if (submitButton) {
+            submitButton.onclick = () => this.submitAnswer();
+        }
+        
         return true;
     }
     
@@ -74,6 +82,9 @@ class QuizHandler {
         const timeLimit = this.currentQuestion.time_limit_seconds;
         let timeLeft = timeLimit;
         const timerElement = document.getElementById('quiz-timer');
+        
+        // ล้าง interval เดิมถ้ามี
+        clearInterval(this.timerInterval);
         
         this.timerInterval = setInterval(() => {
             timeLeft--;
@@ -161,6 +172,8 @@ class QuizHandler {
             this.submitCallback(this.currentQuestion.id, answerId, answerTime);
         }
         
+        // ลบคำถามนี้ออกจาก this.questions
+        delete this.questions[this.currentQuestion.time_to_show];
         this.currentQuestion = null;
         
         // ตรวจสอบว่าตอบคำถามครบทุกข้อแล้วหรือไม่

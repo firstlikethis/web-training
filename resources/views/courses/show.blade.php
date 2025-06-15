@@ -33,9 +33,6 @@
     
     <!-- Quiz Modal Component -->
     @include('components.quiz-modal')
-    
-    <!-- Hidden Questions Data -->
-    <div id="questions-data" class="hidden" data-questions="{{ $questions->count() > 0 ? json_encode($questions) : '[]' }}"></div>
 @endsection
 
 @section('scripts')
@@ -44,47 +41,57 @@
     <script src="{{ asset('js/quiz-handler.js') }}"></script>
     
     <script>
+        // แทนที่จะใช้ data-questions attribute ที่เป็น JSON แบบเปิดเผย 
+        // เราจะกำหนดค่าให้กับตัวแปร JavaScript โดยตรง
+        const courseQuestions = @json($questions);
+        
         document.addEventListener('DOMContentLoaded', function() {
             // Get video element
             const videoElement = document.getElementById('training-video');
             const courseId = "{{ $course->id }}";
             
-            // Get questions data
-            const questionsData = JSON.parse(document.getElementById('questions-data').dataset.questions || '[]');
+            // ตรวจสอบว่ามี videoElement หรือไม่
+            if (!videoElement) {
+                console.error('Video element not found');
+                return;
+            }
             
-            // Initialize VideoPlayer
+            // เรียกใช้ CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            // Initialize QuizHandler ก่อน เพื่อให้พร้อมรับคำถาม
+            const quizHandler = new QuizHandler(courseId, submitAnswer, completeQuiz);
+            
+            // กำหนดคำถามให้ QuizHandler
+            if (courseQuestions && courseQuestions.length > 0) {
+                quizHandler.setQuestions(courseQuestions);
+            }
+            
+            // ฟังก์ชันที่จะถูกเรียกเมื่อถึงเวลาแสดงคำถาม
+            function showQuestion(time) {
+                console.log(`แสดงคำถามที่เวลา ${time} วินาที`);
+                quizHandler.showQuestion(time);
+            }
+            
+            // Initialize VideoPlayer หลังจากเตรียม QuizHandler
             const videoPlayer = new VideoPlayer(videoElement, showQuestion, saveProgress);
             
-            // Initialize question handling only if there are questions
-            if (questionsData && questionsData.length > 0) {
-                // Initialize question times array
-                const questionTimes = questionsData.map(q => q.time_to_show);
-                
-                // Initialize QuizHandler
-                const quizHandler = new QuizHandler(courseId, submitAnswer, completeQuiz);
-                quizHandler.setQuestions(questionsData);
-                
-                // Set question times
+            // กำหนดเวลาที่จะแสดงคำถาม
+            if (courseQuestions && courseQuestions.length > 0) {
+                const questionTimes = courseQuestions.map(q => parseInt(q.time_to_show));
                 videoPlayer.setQuestionTimes(questionTimes);
+                console.log('เวลาที่จะแสดงคำถาม:', questionTimes);
             } else {
-                // No questions, set empty array
                 videoPlayer.setQuestionTimes([]);
             }
             
-            // Function to show question at specific time
-            function showQuestion(time) {
-                if (questionsData && questionsData.length > 0) {
-                    quizHandler.showQuestion(time);
-                }
-            }
-            
-            // Function to save video progress
+            // บันทึกความคืบหน้าในการดูวิดีโอ
             function saveProgress(currentTime, isCompleted) {
                 fetch(`/course/${courseId}/progress`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        'X-CSRF-TOKEN': csrfToken
                     },
                     body: JSON.stringify({
                         current_time: currentTime,
@@ -93,8 +100,6 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Progress saved:', data);
-                    
                     // If video is completed, redirect to summary page
                     if (isCompleted) {
                         window.location.href = `/course/${courseId}/summary`;
@@ -105,13 +110,13 @@
                 });
             }
             
-            // Function to submit answer
+            // บันทึกคำตอบ
             function submitAnswer(questionId, answerId, answerTime) {
                 fetch(`/course/${courseId}/answer`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        'X-CSRF-TOKEN': csrfToken
                     },
                     body: JSON.stringify({
                         question_id: questionId,
@@ -121,32 +126,19 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Answer submitted:', data);
-                    
                     // Continue video playback
                     videoPlayer.continueAfterQuestion();
                 })
                 .catch(error => {
                     console.error('Error submitting answer:', error);
-                    
                     // Continue video playback even if there's an error
                     videoPlayer.continueAfterQuestion();
                 });
             }
             
-            // Function called when all questions are answered
+            // เมื่อตอบคำถามครบทุกข้อ
             function completeQuiz() {
-                console.log('All questions answered');
-            }
-            
-            // Setup submit button for quiz
-            const submitButton = document.getElementById('submit-answer');
-            if (submitButton) {
-                submitButton.addEventListener('click', function() {
-                    if (typeof quizHandler !== 'undefined') {
-                        quizHandler.submitAnswer();
-                    }
-                });
+                console.log('ตอบคำถามครบทุกข้อแล้ว');
             }
         });
     </script>

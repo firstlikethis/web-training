@@ -11,6 +11,7 @@ class VideoPlayer {
         this.allowedTime = 0;
         this.isWatching = false;
         this.isCompleted = false;
+        this.questionsProcessed = {}; // เก็บประวัติคำถามที่แสดงไปแล้ว
         
         if (this.video) {
             this.initEvents();
@@ -57,25 +58,6 @@ class VideoPlayer {
      */
     setQuestionTimes(times) {
         this.questionTimes = times.sort((a, b) => a - b);
-        
-        // กำหนดฟังก์ชันสำหรับเช็คคำถาม
-        window.checkQuestionTime = (currentTime) => {
-            if (this.questionTimes.length === 0) {
-                return;
-            }
-            
-            const nextQuestionTime = this.questionTimes[0];
-            
-            if (currentTime >= nextQuestionTime) {
-                // แสดงคำถาม
-                this.video.pause();
-                
-                this.questionCallback(nextQuestionTime);
-                
-                // ลบเวลาคำถามที่แสดงแล้วออกจาก array
-                this.questionTimes.shift();
-            }
-        };
     }
     
     /**
@@ -87,7 +69,31 @@ class VideoPlayer {
         }
         
         const currentTime = Math.floor(this.video.currentTime);
-        window.checkQuestionTime(currentTime);
+        
+        // ตรวจสอบแต่ละเวลาที่ต้องแสดงคำถาม
+        for (let i = 0; i < this.questionTimes.length; i++) {
+            const questionTime = this.questionTimes[i];
+            
+            // ถ้าเวลาปัจจุบันมากกว่าหรือเท่ากับเวลาที่จะแสดงคำถาม และยังไม่เคยแสดงคำถามนี้
+            if (currentTime >= questionTime && !this.questionsProcessed[questionTime]) {
+                // หยุดวิดีโอ
+                this.video.pause();
+                
+                // บันทึกว่าได้แสดงคำถามนี้ไปแล้ว
+                this.questionsProcessed[questionTime] = true;
+                
+                // เรียกใช้ callback เพื่อแสดงคำถาม
+                if (this.questionCallback) {
+                    this.questionCallback(questionTime);
+                }
+                
+                // ลบเวลานี้ออกจาก questionTimes
+                this.questionTimes.splice(i, 1);
+                
+                // ออกจากลูป เพราะเราแสดงแค่คำถามเดียวต่อครั้ง
+                break;
+            }
+        }
     }
     
     /**

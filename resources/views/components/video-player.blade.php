@@ -21,108 +21,17 @@
     @endif
 </div>
 
-<!-- JavaScript สำหรับวิดีโอ -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const courseId = "{{ $course->id }}";
         const video = document.getElementById('training-video');
         const resumeButton = document.getElementById('resume-video');
         
         // ถ้ามีปุ่ม "เล่นต่อจากครั้งที่แล้ว" ให้ตั้งค่าเหตุการณ์คลิก
-        if (resumeButton) {
+        if (resumeButton && video) {
             resumeButton.addEventListener('click', function() {
                 video.currentTime = {{ $userProgress->current_time ?? 0 }};
                 video.play();
                 this.parentElement.style.display = 'none';
-            });
-        }
-        
-        // ตั้งค่าเหตุการณ์สำหรับวิดีโอ
-        if (video) {
-            // ตรวจจับการเล่นวิดีโอ
-            video.addEventListener('play', () => {
-                window.isWatching = true;
-            });
-            
-            video.addEventListener('pause', () => {
-                window.isWatching = false;
-            });
-            
-            // ตรวจจับการอัปเดตเวลา
-            let lastSavedTime = 0;
-            let allowedTime = 0;
-            
-            video.addEventListener('timeupdate', () => {
-                if (window.isWatching) {
-                    // ตรวจสอบเวลาสำหรับคำถาม
-                    const currentTime = Math.floor(video.currentTime);
-                    if (typeof window.checkQuestionTime === 'function') {
-                        window.checkQuestionTime(currentTime);
-                    }
-                    
-                    // บันทึกความคืบหน้า
-                    if (currentTime > lastSavedTime + 10 || video.ended) {
-                        lastSavedTime = currentTime;
-                        allowedTime = currentTime + 30; // อนุญาตให้ข้ามไปได้อีก 30 วินาที
-                        
-                        // ส่งข้อมูลความคืบหน้าไปยังเซิร์ฟเวอร์
-                        fetch(`/course/${courseId}/progress`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                            },
-                            body: JSON.stringify({
-                                current_time: currentTime,
-                                is_completed: video.ended
-                            })
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            console.log('Progress saved:', data);
-                            
-                            // ถ้าวิดีโอจบแล้ว ให้ redirect ไปหน้าสรุป
-                            if (video.ended) {
-                                window.location.href = `/course/${courseId}/summary`;
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error saving progress:', error);
-                        });
-                    }
-                }
-            });
-            
-            // ป้องกัน user กดข้ามด้วยการ seek
-            video.addEventListener('seeking', () => {
-                if (video.currentTime > allowedTime) {
-                    video.currentTime = allowedTime;
-                }
-            });
-            
-            // เมื่อวิดีโอจบ
-            video.addEventListener('ended', () => {
-                // บันทึกว่าดูจบแล้ว
-                fetch(`/course/${courseId}/progress`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({
-                        current_time: Math.floor(video.duration),
-                        is_completed: true
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Video completed:', data);
-                    // นำไปยังหน้าสรุป
-                    window.location.href = `/course/${courseId}/summary`;
-                })
-                .catch(error => {
-                    console.error('Error saving completion:', error);
-                });
             });
         }
     });
