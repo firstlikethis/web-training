@@ -62,6 +62,7 @@ class VideoPlayer {
         this.video.addEventListener('ended', () => {
             console.log('Video ended event triggered!');
             this.isCompleted = true;
+            // ส่งค่า isCompleted เป็น true เพื่อให้ระบบรู้ว่าวิดีโอจบแล้ว
             this.saveProgress(true);
             this.stopProgressInterval();
         });
@@ -82,7 +83,7 @@ class VideoPlayer {
         // สร้าง interval ใหม่
         this.saveProgressInterval = setInterval(() => {
             this.saveProgress();
-        }, 20000); // บันทึกทุก 20 วินาที
+        }, 10000); // บันทึกทุก 10 วินาที (ลดเวลาลงจาก 20 วินาที)
     }
     
     /**
@@ -144,8 +145,8 @@ class VideoPlayer {
     saveProgress(isCompleted = false) {
         const currentTime = Math.floor(this.video.currentTime);
         
-        // ถ้าเป็นการบันทึกเมื่อวิดีโอจบหรือเมื่อมีการเปลี่ยนแปลงเวลาที่สำคัญ (มากกว่า 5 วินาที)
-        if (isCompleted || Math.abs(currentTime - this.lastSavedTime) > 5) {
+        // ถ้าเป็นการบันทึกเมื่อวิดีโอจบหรือเมื่อมีการเปลี่ยนแปลงเวลาที่สำคัญ (มากกว่า 3 วินาที)
+        if (isCompleted || Math.abs(currentTime - this.lastSavedTime) > 3 || currentTime === this.video.duration) {
             console.log('Saving progress, isCompleted:', isCompleted, 'currentTime:', currentTime);
             this.lastSavedTime = currentTime;
             
@@ -155,7 +156,8 @@ class VideoPlayer {
             }
             
             if (this.progressCallback) {
-                this.progressCallback(currentTime, isCompleted);
+                // ส่งข้อมูลเกี่ยวกับสถานะการเรียนจบไปด้วย
+                this.progressCallback(currentTime, isCompleted || this.isCompleted || currentTime >= this.video.duration);
             }
         }
     }

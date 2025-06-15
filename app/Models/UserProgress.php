@@ -18,6 +18,7 @@ class UserProgress extends Model
         'is_completed',
         'attempt_count',
         'last_attempt_at',
+        'progress_percentage',
     ];
     
     protected $casts = [
@@ -25,6 +26,7 @@ class UserProgress extends Model
         'is_completed' => 'boolean',
         'attempt_count' => 'integer',
         'last_attempt_at' => 'datetime',
+        'progress_percentage' => 'integer',
     ];
     
     // Relationships
@@ -47,10 +49,26 @@ class UserProgress extends Model
     // Get completion percentage
     public function getCompletionPercentage()
     {
+        // ถ้าเรียนจบแล้ว ควรแสดง 100% เสมอ
+        if ($this->is_completed) {
+            return 100;
+        }
+        
         if ($this->course->duration_seconds == 0) {
             return 0;
         }
         
         return min(100, round(($this->current_time / $this->course->duration_seconds) * 100));
+    }
+    
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::saving(function ($model) {
+            if ($model->is_completed) {
+                $model->progress_percentage = 100;
+            }
+        });
     }
 }

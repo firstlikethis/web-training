@@ -24,21 +24,27 @@ class VideoProgressService
             'course_id' => $course->id,
         ]);
         
-        if ($currentTime > $progress->current_time || ($isCompleted && !$progress->is_completed)) {
-            $progress->current_time = $currentTime;
-            
-            // คำนวณเปอร์เซ็นต์ความคืบหน้า
-            if ($course->duration_seconds > 0) {
-                $progress->progress_percentage = min(100, round(($currentTime / $course->duration_seconds) * 100));
-            }
-            
-            // หากดูถึง 95% ของวิดีโอแล้ว ถือว่าเรียนจบ
-            if ($currentTime >= ($course->duration_seconds * 1) || $isCompleted) {
-                $progress->is_completed = true;
-            }
-            
-            $progress->save();
+        // อัปเดตเวลาปัจจุบันเสมอ เพื่อให้แน่ใจว่ามีการบันทึกความคืบหน้า
+        $progress->current_time = $currentTime;
+        
+        // กำหนดสถานะเรียนจบถ้า isCompleted เป็น true หรือดูถึงความยาววิดีโอ
+        if ($isCompleted || ($course->duration_seconds > 0 && $currentTime >= $course->duration_seconds)) {
+            $progress->is_completed = true;
         }
+        
+        // คำนวณเปอร์เซ็นต์ความคืบหน้า
+        if ($progress->is_completed) {
+            // ถ้าเรียนจบแล้ว ให้ตั้งค่าเป็น 100% เสมอ
+            $progress->progress_percentage = 100;
+        } else if ($course->duration_seconds > 0) {
+            // คำนวณปกติถ้ายังไม่จบและความยาววิดีโอไม่ใช่ 0
+            $progress->progress_percentage = min(100, round(($currentTime / $course->duration_seconds) * 100));
+        } else {
+            // ป้องกันกรณี duration_seconds เป็น 0
+            $progress->progress_percentage = 0;
+        }
+        
+        $progress->save();
         
         return $progress;
     }

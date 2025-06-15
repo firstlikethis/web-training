@@ -103,7 +103,9 @@
                             
                             @auth
                                 @php
-                                    $userProgress = $course->userProgress->where('user_id', auth()->id())->first();
+                                    $userProgress = $course->userProgress()
+                                        ->where('user_id', auth()->id())
+                                        ->first();
                                 @endphp
                                 
                                 @if($userProgress)

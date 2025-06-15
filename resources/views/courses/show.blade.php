@@ -48,6 +48,7 @@
             const videoElement = document.getElementById('training-video');
             const courseId = "{{ $course->id }}";
             const resumeTime = {{ $userProgress ? $userProgress->current_time : 0 }};
+            const videoDuration = {{ $course->duration_seconds }};
             
             // ตรวจสอบว่ามี videoElement หรือไม่
             if (!videoElement) {
@@ -56,6 +57,7 @@
             }
             
             console.log('Resume time:', resumeTime);
+            console.log('Video duration:', videoDuration);
             
             // เรียกใช้ CSRF token
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -122,6 +124,12 @@
             // เมื่อตอบคำถามครบทุกข้อ
             function completeQuiz() {
                 console.log('ตอบคำถามครบทุกข้อแล้ว');
+                
+                // ตรวจสอบว่าวิดีโอจบหรือยัง
+                if (videoElement.ended || videoElement.currentTime >= videoElement.duration - 1) {
+                    // บันทึกความคืบหน้าว่าเรียนจบแล้ว
+                    saveProgress(videoElement.currentTime, true);
+                }
             }
             
             // ฟังก์ชันที่จะถูกเรียกเมื่อถึงเวลาแสดงคำถาม
@@ -183,6 +191,13 @@
                         videoPlayer.questionsProcessed[question.time_to_show] = true;
                     }
                 });
+            }
+            
+            // ตรวจสอบว่าถ้าเรียนจบแล้วให้บันทึกความคืบหน้าเป็น 100% ทันที
+            if ({{ $userProgress && $userProgress->is_completed ? 'true' : 'false' }}) {
+                console.log('Course already completed, updating progress to 100%');
+                // บันทึกความคืบหน้าเป็น 100%
+                saveProgress(videoDuration, true);
             }
         });
     </script>

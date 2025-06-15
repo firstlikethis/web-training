@@ -96,6 +96,19 @@ class CourseController extends Controller
             $request->is_completed ?? false
         );
 
+        // อัปเดต user progress เมื่อมีการส่งสถานะ is_completed
+        if ($request->is_completed) {
+            $progress = UserProgress::where('user_id', auth()->id())
+                ->where('course_id', $course->id)
+                ->first();
+                
+            if ($progress) {
+                $progress->is_completed = true;
+                $progress->progress_percentage = 100;
+                $progress->save();
+            }
+        }
+
         return response()->json([
             'success' => true,
             'progress' => $progress,
