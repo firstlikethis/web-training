@@ -70,8 +70,11 @@
 @endsection
 
 @section('content')
-    <div class="card bg-white rounded-2xl shadow p-6">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">อัปโหลดวิดีโอสำหรับคอร์ส</h2>
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-2">อัปโหลดวิดีโอสำหรับคอร์ส</h2>
+            <p class="text-gray-600">อัปโหลดวิดีโอเพื่อเริ่มสร้างคอร์สใหม่</p>
+        </div>
         
         <div class="text-center text-gray-600 mb-8">
             <p class="mb-2">กรุณาอัปโหลดไฟล์วิดีโอของคุณ</p>
@@ -131,11 +134,11 @@
                 @enderror
             </div>
             
-            <div class="flex items-center justify-end">
-                <a href="{{ route('admin.courses.index') }}" class="btn btn-secondary px-4 py-2 mr-3">
+            <div class="flex items-center justify-end space-x-3">
+                <a href="{{ route('admin.courses.index') }}" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
                     <i class="fas fa-arrow-left mr-1"></i> ยกเลิก
                 </a>
-                <button type="submit" id="submit-btn" class="btn btn-primary px-4 py-2">
+                <button type="submit" id="submit-btn" class="btn btn-primary">
                     <span id="btn-text">ถัดไป</span>
                     <i class="fas fa-arrow-right ml-1"></i>
                 </button>

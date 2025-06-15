@@ -1,19 +1,19 @@
 @extends('layouts.admin')
 
-@section('title', 'รายละเอียดคอร์ส - ขั้นตอนที่ 2')
+@section('title', 'รายละเอียดคอร์ส - Admin Dashboard')
 
-@section('page-title', 'กรอกรายละเอียดคอร์ส - Draft')
+@section('page-title', 'กรอกรายละเอียดคอร์ส')
 
 @section('content')
-    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
         <div class="mb-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">รายละเอียดคอร์ส (สถานะ: Draft)</h2>
-            <p class="text-gray-600 mb-4">คุณสามารถบันทึกร่างคอร์สไว้ก่อนและมาแก้ไขเพิ่มเติมในภายหลังได้ หรือกดเผยแพร่เมื่อกรอกข้อมูลครบถ้วน</p>
+            <h2 class="text-xl font-bold text-gray-800 mb-2">รายละเอียดคอร์ส (สถานะ: Draft)</h2>
+            <p class="text-gray-600">คุณสามารถบันทึกร่างคอร์สไว้ก่อนและมาแก้ไขเพิ่มเติมในภายหลังได้ หรือกดเผยแพร่เมื่อกรอกข้อมูลครบถ้วน</p>
         </div>
         
         <!-- แสดงตัวอย่างวิดีโอ -->
-        <div class="mb-6">
-            <h3 class="text-lg font-bold text-gray-800 mb-2">ตัวอย่างวิดีโอ</h3>
+        <div class="mb-6 p-4 bg-gray-50 rounded-xl">
+            <h3 class="text-lg font-medium text-gray-800 mb-3">ตัวอย่างวิดีโอ</h3>
             <div class="aspect-w-16 aspect-h-9 bg-gray-100 rounded-lg overflow-hidden">
                 @if($course->video_path)
                     <video 
@@ -35,8 +35,14 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div class="md:col-span-2">
                     <label for="title" class="block text-sm font-medium text-gray-700 mb-1">ชื่อคอร์ส</label>
-                    <input type="text" name="title" id="title" value="{{ old('title', $course->title) }}" 
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-book text-gray-400"></i>
+                        </div>
+                        <input type="text" name="title" id="title" value="{{ old('title', $course->title) }}" 
+                               class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                               placeholder="ชื่อคอร์ส">
+                    </div>
                     
                     @error('title')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -46,7 +52,8 @@
                 <div class="md:col-span-2">
                     <label for="description" class="block text-sm font-medium text-gray-700 mb-1">รายละเอียด</label>
                     <textarea name="description" id="description" rows="4" 
-                              class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">{{ old('description', $course->description) }}</textarea>
+                              class="w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                              placeholder="รายละเอียดคอร์ส">{{ old('description', $course->description) }}</textarea>
                     
                     @error('description')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -55,15 +62,20 @@
                 
                 <div>
                     <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">หมวดหมู่</label>
-                    <select name="category_id" id="category_id" 
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                        <option value="">-- ไม่มีหมวดหมู่ --</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}" {{ old('category_id', $course->category_id) == $category->id ? 'selected' : '' }}>
-                                {{ $category->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-folder text-gray-400"></i>
+                        </div>
+                        <select name="category_id" id="category_id" 
+                                class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            <option value="">-- ไม่มีหมวดหมู่ --</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" {{ old('category_id', $course->category_id) == $category->id ? 'selected' : '' }}>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                     
                     @error('category_id')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -72,8 +84,13 @@
                 
                 <div>
                     <label for="thumbnail" class="block text-sm font-medium text-gray-700 mb-1">รูปภาพปก</label>
-                    <input type="file" name="thumbnail" id="thumbnail" accept="image/*" 
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-image text-gray-400"></i>
+                        </div>
+                        <input type="file" name="thumbnail" id="thumbnail" accept="image/*" 
+                               class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </div>
                     
                     @error('thumbnail')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -82,7 +99,7 @@
                 
                 <div class="flex items-center">
                     <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}
-                           class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                           class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50">
                     <label for="is_active" class="ml-2 block text-sm font-medium text-gray-700">เปิดใช้งานคอร์ส</label>
                 </div>
             </div>
@@ -179,8 +196,8 @@
                     @endif
                 </div>
                 
-                <button type="button" id="add-question" class="mt-4 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">
-                    + เพิ่มคำถามใหม่
+                <button type="button" id="add-question" class="mt-4 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition">
+                    <i class="fas fa-plus mr-1"></i> เพิ่มคำถามใหม่
                 </button>
                 
                 @error('questions')
@@ -188,16 +205,21 @@
                 @enderror
             </div>
             
-            <div class="flex items-center justify-end mt-8">
-                <form method="POST" action="{{ route('admin.courses.cancel_draft', $course) }}" class="mr-4">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-end space-y-3 md:space-y-0 md:space-x-3 mt-8">
+                <form method="POST" action="{{ route('admin.courses.cancel_draft', $course) }}" class="md:mr-auto">
                     @csrf
-                    <button type="submit" class="text-red-600 hover:text-red-800" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการยกเลิก? วิดีโอและข้อมูลทั้งหมดจะถูกลบ')">ยกเลิก</button>
+                    <button type="submit" class="w-full md:w-auto px-4 py-2 text-red-600 hover:text-red-800 hover:underline" 
+                            onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการยกเลิก? วิดีโอและข้อมูลทั้งหมดจะถูกลบ')">
+                        <i class="fas fa-trash-alt mr-1"></i> ยกเลิกการสร้างคอร์ส
+                    </button>
                 </form>
                 
-                <div class="flex space-x-4">
-                    <button type="submit" name="save_draft" value="1" class="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600">บันทึกร่าง</button>
-                    <button type="submit" name="publish" value="1" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">เผยแพร่คอร์ส</button>
-                </div>
+                <button type="submit" name="save_draft" value="1" class="w-full md:w-auto px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">
+                    <i class="fas fa-save mr-1"></i> บันทึกร่าง
+                </button>
+                <button type="submit" name="publish" value="1" class="w-full md:w-auto btn btn-primary">
+                    <i class="fas fa-paper-plane mr-1"></i> เผยแพร่คอร์ส
+                </button>
             </div>
         </form>
     </div>
