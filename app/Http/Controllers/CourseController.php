@@ -11,7 +11,8 @@ use App\Services\VideoProgressService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
-use getID3;
+use Illuminate\Support\Facades\Validator; // เพิ่ม import นี้
+use Illuminate\Support\Facades\Log;
 
 class CourseController extends Controller
 {
@@ -300,9 +301,7 @@ class CourseController extends Controller
                     }
                     
                     // พยายามคำนวณความยาววิดีโอถ้ามี getID3
-                    if (class_exists('getID3')) {
-                        $durationSeconds = $this->getVideoDuration($videoPath);
-                    }
+                    $durationSeconds = $this->getVideoDuration($videoPath);
                     
                     $course->video_path = $videoPath;
                     $course->duration_seconds = $durationSeconds;
@@ -617,9 +616,7 @@ class CourseController extends Controller
                 $course->video_url = null; // ล้าง URL ถ้ามีการอัปโหลดไฟล์
                 
                 // คำนวณความยาววิดีโอใหม่
-                if (class_exists('getID3')) {
-                    $course->duration_seconds = $this->getVideoDuration($videoPath);
-                }
+                $course->duration_seconds = $this->getVideoDuration($videoPath);
             }
 
             $course->title = $request->title;
@@ -743,16 +740,44 @@ class CourseController extends Controller
     private function getVideoDuration($videoPath)
     {
         try {
-            $getID3 = new getID3;
-            $fileInfo = $getID3->analyze(storage_path('app/public/' . $videoPath));
-            
-            if (isset($fileInfo['playtime_seconds'])) {
-                return (int) $fileInfo['playtime_seconds'];
+            // วิธีที่ 1: ใช้ getID3 library (ถ้ามี)
+            if (class_exists('\getID3')) {
+                Log::info('Using getID3 to get video duration');
+                $getID3 = new \getID3();
+                $fullPath = storage_path('app/public/' . $videoPath);
+                
+                if (!file_exists($fullPath)) {
+                    Log::error("Video file not found: " . $fullPath);
+                    throw new \Exception("Video file not found");
+                }
+                
+                $fileInfo = $getID3->analyze($fullPath);
+                
+                if (isset($fileInfo['playtime_seconds'])) {
+                    Log::info('Video duration detected: ' . $fileInfo['playtime_seconds'] . ' seconds');
+                    return (int) $fileInfo['playtime_seconds'];
+                } else {
+                    Log::warning("playtime_seconds not found in getID3 analysis");
+                }
+            } else {
+                Log::warning('getID3 class not found, using file size method');
             }
+            
+            // วิธีที่ 2: ประมาณจากขนาดไฟล์
+            $fileSize = Storage::disk('public')->size($videoPath); // ขนาดไฟล์ในหน่วย bytes
+            $fileSizeInMB = $fileSize / (1024 * 1024); // แปลงเป็น MB
+            
+            // ประมาณว่า 1MB ≈ 10 วินาที (ปรับได้ตามคุณภาพวิดีโอทั่วไป)
+            $estimatedDuration = round($fileSizeInMB * 10);
+            
+            // ขั้นต่ำ 30 วินาที
+            Log::info('Estimated video duration from file size: ' . max(30, $estimatedDuration) . ' seconds');
+            return max(30, $estimatedDuration);
+            
         } catch (\Exception $e) {
+            Log::error("Error getting video duration: " . $e->getMessage());
             // ถ้าเกิดข้อผิดพลาด ให้ใช้ค่าเริ่มต้น
+            return 60; // กำหนดค่าเริ่มต้น 60 วินาที
         }
-        
-        return 0;
     }
 }
