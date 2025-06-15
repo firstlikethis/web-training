@@ -5,65 +5,91 @@
 @section('page-title', 'จัดการคอร์ส')
 
 @section('content')
-    <div class="mb-6 flex justify-between items-center">
-        <p class="text-gray-600">จัดการคอร์สทั้งหมดในระบบ</p>
-        <a href="{{ route('admin.courses.create') }}" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-            <span class="mr-1">+</span> เพิ่มคอร์สใหม่
-        </a>
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800">คอร์สทั้งหมด</h2>
+            <p class="mt-1 text-sm text-gray-600">จัดการคอร์สทั้งหมดในระบบ</p>
+        </div>
+        
+        <div class="mt-4 md:mt-0">
+            <a href="{{ route('admin.courses.create') }}" class="btn btn-primary px-4 py-2 flex items-center justify-center">
+                <i class="fas fa-plus mr-2"></i> เพิ่มคอร์สใหม่
+            </a>
+        </div>
     </div>
     
     <!-- คอร์สที่อยู่ระหว่างการสร้าง (Draft) -->
     @if($draftCourses->count() > 0)
     <div class="mb-8">
-        <h2 class="text-xl font-bold text-gray-800 mb-4">คอร์สที่กำลังสร้าง (Draft)</h2>
+        <div class="flex items-center mb-4">
+            <div class="w-4 h-4 rounded-full bg-yellow-400 mr-2"></div>
+            <h3 class="text-lg font-semibold text-gray-800">คอร์สที่กำลังสร้าง (Draft)</h3>
+        </div>
         
-        <div class="bg-white rounded-lg shadow overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">คอร์ส</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วิดีโอ</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สร้างเมื่อ</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">การจัดการ</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($draftCourses as $course)
+        <div class="bg-white rounded-2xl shadow overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
                         <tr>
-                            <td class="px-6 py-4">
-                                <div class="text-sm font-medium text-gray-900">{{ $course->title }}</div>
-                                <div class="text-xs text-gray-500">(อยู่ระหว่างการสร้าง)</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @if($course->video_path)
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                        อัปโหลดแล้ว
-                                    </span>
-                                @elseif($course->video_url)
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                        YouTube
-                                    </span>
-                                @else
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                        ยังไม่มีวิดีโอ
-                                    </span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                {{ $course->created_at->format('d/m/Y H:i') }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="{{ route('admin.courses.edit_details', $course) }}" class="text-blue-600 hover:text-blue-900 mr-3">แก้ไข/เผยแพร่</a>
-                                
-                                <form method="POST" action="{{ route('admin.courses.cancel_draft', $course) }}" class="inline-block">
-                                    @csrf
-                                    <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการยกเลิก? วิดีโอและข้อมูลทั้งหมดจะถูกลบ')">ยกเลิก</button>
-                                </form>
-                            </td>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">คอร์ส</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วิดีโอ</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สร้างเมื่อ</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">การจัดการ</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        @foreach($draftCourses as $course)
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10 rounded-lg bg-yellow-100 flex items-center justify-center text-yellow-500">
+                                            <i class="fas fa-file-alt"></i>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">{{ $course->title }}</div>
+                                            <div class="flex items-center mt-1">
+                                                <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
+                                                    อยู่ระหว่างการสร้าง
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if($course->video_path)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <i class="fas fa-check-circle mr-1"></i> อัปโหลดแล้ว
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            <i class="fas fa-times-circle mr-1"></i> ยังไม่มีวิดีโอ
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-clock mr-2 text-gray-400"></i>
+                                        {{ $course->created_at->format('d/m/Y H:i') }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="{{ route('admin.courses.edit_details', $course) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                                        <i class="fas fa-edit mr-1"></i> แก้ไข/เผยแพร่
+                                    </a>
+                                    
+                                    <form method="POST" action="{{ route('admin.courses.cancel_draft', $course) }}" class="inline-block">
+                                        @csrf
+                                        <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการยกเลิก? วิดีโอและข้อมูลทั้งหมดจะถูกลบ')">
+                                            <i class="fas fa-trash-alt mr-1"></i> ยกเลิก
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
         
         <!-- Pagination สำหรับ draft courses -->
@@ -75,11 +101,11 @@
     
     <!-- ตัวกรองสำหรับคอร์ส -->
     <div class="mb-6">
-        <form action="{{ route('admin.courses.index') }}" method="GET" class="bg-white p-4 rounded-lg shadow-sm">
-            <div class="flex flex-wrap gap-4 items-end">
-                <div>
+        <form action="{{ route('admin.courses.index') }}" method="GET" class="bg-white rounded-2xl shadow p-6">
+            <div class="flex flex-col md:flex-row md:items-end gap-4">
+                <div class="flex-1">
                     <label for="category_filter" class="block text-sm font-medium text-gray-700 mb-1">กรองตามหมวดหมู่</label>
-                    <select name="category" id="category_filter" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                    <select name="category" id="category_filter" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
                         <option value="">ทั้งหมด</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
@@ -88,19 +114,30 @@
                         @endforeach
                     </select>
                 </div>
-                <div>
+                
+                <div class="flex-1">
                     <label for="search" class="block text-sm font-medium text-gray-700 mb-1">ค้นหา</label>
-                    <input type="text" name="search" id="search" value="{{ request('search') }}" placeholder="ชื่อคอร์ส..." 
-                           class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                        <input type="text" name="search" id="search" value="{{ request('search') }}" 
+                            class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md" 
+                            placeholder="ชื่อคอร์ส...">
+                    </div>
                 </div>
+                
                 <div>
-                    <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-                        กรอง
+                    <button type="submit" class="btn btn-primary px-4 py-2 w-full md:w-auto">
+                        <i class="fas fa-filter mr-1"></i> กรอง
                     </button>
                 </div>
+                
                 @if(request('category') || request('search'))
                     <div>
-                        <a href="{{ route('admin.courses.index') }}" class="text-gray-600 hover:text-gray-800">ล้างตัวกรอง</a>
+                        <a href="{{ route('admin.courses.index') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">
+                            <i class="fas fa-times mr-1"></i> ล้างตัวกรอง
+                        </a>
                     </div>
                 @endif
             </div>
@@ -109,74 +146,109 @@
     
     <!-- คอร์สที่เผยแพร่แล้ว (Published) -->
     <div>
-        <h2 class="text-xl font-bold text-gray-800 mb-4">คอร์สที่เผยแพร่แล้ว</h2>
+        <div class="flex items-center mb-4">
+            <div class="w-4 h-4 rounded-full bg-green-400 mr-2"></div>
+            <h3 class="text-lg font-semibold text-gray-800">คอร์สที่เผยแพร่แล้ว</h3>
+        </div>
         
-        <div class="bg-white rounded-lg shadow overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">คอร์ส</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">หมวดหมู่</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">จำนวนคำถาม</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ความยาว</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">การจัดการ</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($courses as $course)
+        <div class="bg-white rounded-2xl shadow overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
                         <tr>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center">
-                                    @if($course->thumbnail)
-                                        <div class="flex-shrink-0 h-10 w-10 mr-4">
-                                            <img class="h-10 w-10 rounded-md object-cover" src="{{ asset('storage/' . $course->thumbnail) }}" alt="{{ $course->title }}">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">คอร์ส</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">หมวดหมู่</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">จำนวนคำถาม</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ความยาว</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">การจัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        @forelse($courses as $course)
+                            <tr class="hover:bg-gray-50 transition duration-150">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        @if($course->thumbnail)
+                                            <div class="flex-shrink-0 h-10 w-10 rounded-lg overflow-hidden">
+                                                <img class="h-10 w-10 object-cover" src="{{ asset('storage/' . $course->thumbnail) }}" alt="{{ $course->title }}">
+                                            </div>
+                                        @else
+                                            <div class="flex-shrink-0 h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center text-gray-500">
+                                                <i class="fas fa-book"></i>
+                                            </div>
+                                        @endif
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">{{ $course->title }}</div>
+                                            <div class="text-xs text-gray-500">สร้างเมื่อ {{ $course->created_at->format('d/m/Y') }}</div>
                                         </div>
-                                    @endif
-                                    <div>
-                                        <div class="text-sm font-medium text-gray-900">{{ $course->title }}</div>
-                                        <div class="text-sm text-gray-500">สร้างเมื่อ {{ $course->created_at->format('d/m/Y') }}</div>
                                     </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @if($course->category)
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                        {{ $course->category->name }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if($course->category)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            {{ $course->category->name }}
+                                        </span>
+                                    @else
+                                        <span class="text-gray-500">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                        <i class="fas fa-question-circle mr-1"></i> {{ $course->questions_count }} คำถาม
                                     </span>
-                                @else
-                                    <span class="text-gray-500">-</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                    {{ $course->questions_count }} คำถาม
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                {{ floor($course->duration_seconds / 60) }} นาที {{ $course->duration_seconds % 60 }} วินาที
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $course->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                    {{ $course->is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน' }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="{{ route('admin.courses.edit', $course) }}" class="text-blue-600 hover:text-blue-900 mr-3">แก้ไข</a>
-                                
-                                <form method="POST" action="{{ route('admin.courses.destroy', $course) }}" class="inline-block">
-                                    @csrf
-                                    <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบคอร์สนี้?')">ลบ</button>
-                                </form>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">ไม่พบข้อมูลคอร์ส</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-clock mr-2 text-gray-400"></i>
+                                        {{ floor($course->duration_seconds / 60) }} นาที {{ $course->duration_seconds % 60 }} วินาที
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if($course->is_active)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <i class="fas fa-check-circle mr-1"></i> เปิดใช้งาน
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            <i class="fas fa-times-circle mr-1"></i> ปิดใช้งาน
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex space-x-3">
+                                        <a href="{{ route('admin.courses.edit', $course) }}" class="text-indigo-600 hover:text-indigo-900">
+                                            <i class="fas fa-edit mr-1"></i> แก้ไข
+                                        </a>
+                                        
+                                        <form method="POST" action="{{ route('admin.courses.destroy', $course) }}" class="inline-block">
+                                            @csrf
+                                            <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบคอร์สนี้?')">
+                                                <i class="fas fa-trash-alt mr-1"></i> ลบ
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-6 py-10 text-center">
+                                    <div class="flex flex-col items-center">
+                                        <div class="h-16 w-16 text-gray-400 mb-4">
+                                            <i class="fas fa-book text-5xl"></i>
+                                        </div>
+                                        <p class="text-base font-medium text-gray-900 mb-1">ไม่พบข้อมูลคอร์ส</p>
+                                        <p class="text-sm text-gray-500 mb-4">เริ่มสร้างคอร์สใหม่ตอนนี้</p>
+                                        <a href="{{ route('admin.courses.create') }}" class="btn btn-primary px-4 py-2">
+                                            <i class="fas fa-plus mr-1"></i> เพิ่มคอร์สใหม่
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
         
         <!-- Pagination -->
