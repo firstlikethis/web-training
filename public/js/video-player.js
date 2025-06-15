@@ -14,18 +14,8 @@ class VideoPlayer {
         this.questionsProcessed = {}; // เก็บประวัติคำถามที่แสดงไปแล้ว
         this.saveProgressInterval = null; // เพิ่มตัวแปรสำหรับเก็บ interval
         
-        // ตรวจสอบค่า resumeTime ที่อาจถูกส่งมา
-        this.resumeTime = this.video ? parseInt(this.video.dataset.resumeTime || 0) : 0;
-        
         if (this.video) {
             this.initEvents();
-            
-            // ตั้งค่า lastSavedTime เริ่มต้นจาก resumeTime
-            if (this.resumeTime > 0) {
-                this.lastSavedTime = this.resumeTime;
-                this.allowedTime = this.resumeTime + 30; // อนุญาตให้ข้ามไปได้อีก 30 วินาที
-                console.log('VideoPlayer initialized with resumeTime:', this.resumeTime);
-            }
         }
     }
 
@@ -53,6 +43,11 @@ class VideoPlayer {
         // ตรวจจับการอัปเดตเวลา
         this.video.addEventListener('timeupdate', () => {
             this.checkQuestionTime();
+            
+            // อัปเดต allowedTime เมื่อเล่นวิดีโอปกติ
+            if (this.isWatching && this.video.currentTime > this.allowedTime - 20) {
+                this.allowedTime = this.video.currentTime + 30; // อนุญาตให้ข้ามไปได้อีก 30 วินาที
+            }
         });
         
         // ป้องกัน user กดข้ามด้วยการ seek
@@ -105,19 +100,6 @@ class VideoPlayer {
     */
     setQuestionTimes(times) {
         this.questionTimes = times.sort((a, b) => a - b);
-        
-        // ถ้า resumeTime > 0 ให้ทำการกรองคำถามที่ผ่านไปแล้ว
-        if (this.resumeTime > 0) {
-            // คำถามที่ผ่านไปแล้ว ให้ทำเครื่องหมายว่าได้แสดงไปแล้ว
-            this.questionTimes.forEach(time => {
-                if (time < this.resumeTime) {
-                    this.questionsProcessed[time] = true;
-                }
-            });
-            
-            // กรองคำถามที่ยังไม่ได้แสดง
-            this.questionTimes = this.questionTimes.filter(time => time >= this.resumeTime);
-        }
     }
     
     /**
@@ -166,7 +148,11 @@ class VideoPlayer {
         if (isCompleted || Math.abs(currentTime - this.lastSavedTime) > 5) {
             console.log('Saving progress, isCompleted:', isCompleted, 'currentTime:', currentTime);
             this.lastSavedTime = currentTime;
-            this.allowedTime = currentTime + 30; // อนุญาตให้ข้ามไปได้อีก 30 วินาที
+            
+            // อัปเดต allowedTime เมื่อบันทึกความคืบหน้า
+            if (currentTime > this.allowedTime - 20) {
+                this.allowedTime = currentTime + 30; // อนุญาตให้ข้ามไปได้อีก 30 วินาที
+            }
             
             if (this.progressCallback) {
                 this.progressCallback(currentTime, isCompleted);
@@ -179,6 +165,22 @@ class VideoPlayer {
      */
     continueAfterQuestion() {
         if (this.video) {
+            this.video.play();
+        }
+    }
+    
+    /**
+     * ตั้งค่าเวลาเริ่มต้นและเล่นวิดีโอ
+     */
+    setStartTimeAndPlay(time) {
+        if (this.video) {
+            // กำหนดค่า allowedTime ทันที
+            this.allowedTime = time + 30;
+            this.lastSavedTime = time;
+            
+            // ตั้งค่า currentTime และเล่นวิดีโอ
+            console.log("Setting video time to:", time);
+            this.video.currentTime = time;
             this.video.play();
         }
     }
