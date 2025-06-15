@@ -15,55 +15,129 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
         body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f5f7fa;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%234f46e5' fill-opacity='0.05'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9z'/%3E%3Cpath d='M6 5V0H5v5H0v1h5v94h1V6h94V5H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            font-family: 'Inter', sans-serif;
+            background: #f4f7fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(147, 51, 234, 0.05) 100%);
+            position: relative;
+            overflow: hidden;
         }
         
-        /* Card styling */
+        body::before {
+            content: "";
+            position: absolute;
+            width: 1000px;
+            height: 1000px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%);
+            top: -400px;
+            right: -400px;
+            z-index: -1;
+        }
+        
+        body::after {
+            content: "";
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+            bottom: -300px;
+            left: -300px;
+            z-index: -1;
+        }
+        
         .auth-card {
-            border-radius: 1rem;
             background: white;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            transition: all 0.3s ease;
         }
         
-        /* Input styling */
+        .auth-card:hover {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: translateY(-5px);
+        }
+        
+        .auth-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+        }
+        
         .form-input {
-            transition: all 0.2s;
+            display: block;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #374151;
+            background-color: #F9FAFB;
+            background-clip: padding-box;
+            border: 1px solid #E5E7EB;
             border-radius: 0.5rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
         }
         
         .form-input:focus {
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
-        }
-        
-        /* Button styling */
-        .btn {
-            transition: all 0.2s;
-            border-radius: 0.5rem;
-            font-weight: 500;
+            border-color: #93C5FD;
+            outline: 0;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+            background-color: #fff;
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #4f46e5 0%, #7e3af2 100%);
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
             color: white;
+            background-image: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
         }
         
         .btn-primary:hover {
+            background-image: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+        
+        .auth-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            margin-bottom: 1.5rem;
+            color: white;
+            font-size: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
         }
         
         /* Animation */
-        @keyframes fadeIn {
+        @keyframes fadeUp {
             from {
                 opacity: 0;
-                transform: translateY(-10px);
+                transform: translateY(20px);
             }
             to {
                 opacity: 1;
@@ -71,32 +145,29 @@
             }
         }
         
-        .animate-fadeIn {
-            animation: fadeIn 0.5s ease-out forwards;
+        .auth-card {
+            animation: fadeUp 0.6s ease-out forwards;
         }
     </style>
     
     @yield('styles')
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
-    <!-- Login Form Container -->
-    <div class="auth-card w-full max-w-md p-8 animate-fadeIn">
-        <div class="text-center mb-8">
-            <div class="flex justify-center mb-4">
-                <div class="h-16 w-16 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                    <i class="fas fa-graduation-cap text-2xl"></i>
-                </div>
+<body class="px-4 py-8">
+    <div class="auth-card p-8">
+        <div class="text-center">
+            <div class="auth-icon">
+                <i class="fas fa-graduation-cap"></i>
             </div>
-            <h1 class="text-2xl font-bold text-gray-800">@yield('auth-title', 'เข้าสู่ระบบ')</h1>
-            <p class="text-gray-600 mt-2">@yield('auth-subtitle', 'ยินดีต้อนรับสู่ระบบฝึกอบรมออนไลน์')</p>
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">@yield('auth-title', 'เข้าสู่ระบบ')</h1>
+            <p class="text-gray-500 mb-8">@yield('auth-subtitle', 'ยินดีต้อนรับสู่ระบบฝึกอบรมออนไลน์')</p>
         </div>
         
         <!-- Flash Messages -->
         @if(session('success'))
-            <div class="bg-green-50 border-l-4 border-green-400 p-4 mb-6 rounded-md">
+            <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-md animate-pulse">
                 <div class="flex">
                     <div class="flex-shrink-0">
-                        <i class="fas fa-check-circle text-green-400"></i>
+                        <i class="fas fa-check-circle text-green-500"></i>
                     </div>
                     <div class="ml-3">
                         <p class="text-sm text-green-700">{{ session('success') }}</p>
@@ -106,10 +177,10 @@
         @endif
         
         @if(session('error'))
-            <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded-md">
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-md animate-pulse">
                 <div class="flex">
                     <div class="flex-shrink-0">
-                        <i class="fas fa-exclamation-circle text-red-400"></i>
+                        <i class="fas fa-exclamation-circle text-red-500"></i>
                     </div>
                     <div class="ml-3">
                         <p class="text-sm text-red-700">{{ session('error') }}</p>
@@ -121,8 +192,8 @@
         @yield('content')
         
         <div class="mt-8 text-center">
-            <a href="{{ route('home') }}" class="text-indigo-600 hover:text-indigo-800 text-sm flex items-center justify-center">
-                <i class="fas fa-home mr-1"></i> กลับไปหน้าหลัก
+            <a href="{{ route('home') }}" class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i> กลับไปหน้าหลัก
             </a>
         </div>
     </div>
